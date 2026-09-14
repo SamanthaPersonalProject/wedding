@@ -1,0 +1,702 @@
+/* =============================================================
+   Componenti — riusabili su landing e portale.
+   Ogni blocco è indipendente: nessun componente conosce il padre.
+   ============================================================= */
+
+/* --- bottoni ------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--f-display);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 14px 32px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition: filter .18s ease, background-color .18s ease, color .18s ease;
+}
+
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.btn--gold {
+  color: var(--c-black);
+  background: linear-gradient(100deg, var(--c-gold-deep), var(--c-gold-hi) 42%, var(--c-gold) 100%);
+}
+.btn--gold:hover:not(:disabled) { filter: brightness(1.1); }
+
+.btn--ghost {
+  color: var(--c-gold-hi);
+  background: transparent;
+  border-color: rgba(201, 161, 91, .5);
+}
+.btn--ghost:hover:not(:disabled) { background: rgba(201, 161, 91, .12); }
+
+.btn--quiet {
+  color: var(--t-on-light-soft);
+  background: transparent;
+  border-color: rgba(22, 34, 63, .2);
+}
+.btn--quiet:hover:not(:disabled) { background: rgba(22, 34, 63, .05); }
+
+.btn--danger {
+  color: var(--c-danger);
+  background: transparent;
+  border-color: rgba(163, 37, 47, .35);
+}
+.btn--danger:hover:not(:disabled) { background: var(--c-danger-soft); }
+
+.btn--sm { padding: 8px 16px; font-size: var(--fs-xs); }
+.btn--block { width: 100%; }
+
+/* --- campi -------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field__label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-light-mute);
+}
+
+.field__hint {
+  font-size: var(--fs-sm);
+  color: var(--t-on-light-mute);
+}
+
+.field__error {
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  color: var(--t-on-light);
+  background: var(--s-paper-2);
+  border: var(--b-light);
+  border-radius: 0;
+  padding: 12px 14px;
+}
+
+.input:invalid:not(:placeholder-shown),
+.input[aria-invalid="true"] { border-color: var(--c-danger); }
+
+.textarea { resize: vertical; min-height: 96px; }
+
+.select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--c-gold-deep) 50%),
+    linear-gradient(135deg, var(--c-gold-deep) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.input--code {
+  font-family: var(--f-ui);
+  font-size: 1.3rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--sp-5);
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  font-size: 1.02rem;
+  cursor: pointer;
+}
+
+.check input { margin-top: 6px; flex: 0 0 auto; }
+
+/* --- badge di stato ----------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: .04em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge--ok      { color: var(--c-ok);     background: var(--c-ok-soft); }
+.badge--wait    { color: var(--c-warn);   background: var(--c-warn-soft); }
+.badge--absent  { color: var(--c-danger); background: var(--c-danger-soft); }
+
+/* --- avvisi ------------------------------------------------- */
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  font-size: 1rem;
+  border-left: 3px solid currentColor;
+}
+
+.notice--ok     { color: var(--c-ok);     background: var(--c-ok-soft); }
+.notice--warn   { color: var(--c-warn);   background: var(--c-warn-soft); }
+.notice--danger { color: var(--c-danger); background: var(--c-danger-soft); }
+.notice strong  { color: var(--t-on-light); }
+.notice p       { color: var(--t-on-light-soft); }
+
+/* --- stati vuoti e caricamento ------------------------------ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+  color: var(--t-on-light-mute);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- conto alla rovescia ------------------------------------ */
+
+.countdown {
+  display: flex;
+  border: var(--b-gold);
+  background: rgba(4, 6, 14, .45);
+}
+
+.countdown__unit { padding: 12px 22px; min-width: 96px; text-align: center; }
+.countdown__unit + .countdown__unit { border-left: var(--b-gold); }
+
+.countdown__value {
+  display: block;
+  font-size: var(--fs-xl);
+  font-weight: 400;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-gold-hi);
+}
+
+.countdown__label {
+  font-size: .7rem;
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-dark-mute);
+}
+
+/* --- programma ---------------------------------------------- */
+
+/* Il tetto sta sulla lista, non sul testo: così il filetto che separa
+   due voci finisce dove finisce la descrizione. Capparne solo il testo
+   lasciava righe lunghe tutta la sezione con sotto mezza riga scritta. */
+.schedule {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(7.5rem + var(--sp-5) + var(--w-prose));
+}
+
+.schedule__item {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 4px var(--sp-5);
+  padding-block: var(--sp-5);
+  border-top: var(--b-gold-soft);
+}
+
+.schedule__item:last-child { border-bottom: var(--b-gold-soft); }
+
+.schedule__time {
+  font-size: var(--fs-lg);
+  color: var(--c-gold-hi);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.schedule__body { grid-column: 2; color: var(--t-on-dark-soft); font-size: 1.02rem; }
+.schedule__term { color: var(--c-gold-hi); font-style: italic; }
+
+/* Stessa lista, usata per le date storiche invece che per gli orari:
+   la colonna serve più larga perché ci sta "IX sec. a.C." */
+.schedule--facts .schedule__item { grid-template-columns: 7.5rem 1fr; }
+
+.schedule--facts .schedule__time {
+  font-size: 1.12rem;
+  letter-spacing: .03em;
+  color: var(--c-gold);
+}
+
+/* --- schede --------------------------------------------------
+   I pannelli li nasconde js/landing/tabs.js, non il CSS: senza JS
+   restano aperti tutti e il contenuto resta leggibile. */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.tabs__list {
+  display: flex;
+  gap: var(--sp-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: var(--b-gold-soft);
+}
+
+.tabs__list::-webkit-scrollbar { display: none; }
+
+.tabs__tab {
+  flex: 0 0 auto;
+  margin-bottom: -1px;
+  padding: var(--sp-3);
+  font-family: var(--f-ui);
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--t-on-dark-mute);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.tabs__tab:hover { color: var(--t-on-dark); }
+
+.tabs__tab[aria-selected="true"] {
+  color: var(--c-gold-hi);
+  border-bottom-color: var(--c-gold);
+}
+
+.tabs__intro { margin-bottom: var(--sp-6); }
+
+/* Quando le schede non ci stanno in riga la striscia scorre, e senza un
+   segno non si capisce. Le classi le mette js/landing/tabs.js in base a
+   dov'è lo scorrimento, così la sfumatura sparisce agli estremi invece
+   di mangiarsi per sempre l'ultima scheda. */
+.tabs__list--more-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+
+.tabs__list--more-left {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+}
+
+.tabs__list--more-left.tabs__list--more-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+}
+
+@media (max-width: 560px) {
+  .schedule--facts .schedule__item { grid-template-columns: 1fr; }
+  .schedule--facts .schedule__body { grid-column: 1; }
+}
+
+/* --- griglia simboli ---------------------------------------- */
+
+.symbols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 2px;
+  background: rgba(201, 161, 91, .22);
+  border: var(--b-gold-soft);
+}
+
+.symbols__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6) var(--sp-5);
+  text-align: center;
+  background: var(--c-forest);
+}
+
+.symbols__icon { width: 82px; height: 82px; color: var(--c-gold); }
+.symbols__name { color: var(--c-white); font-size: 1.28rem; }
+
+.symbols__gaelic {
+  margin-top: calc(var(--sp-2) * -1);
+  font-size: .72rem;
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-dark-mute);
+}
+
+.symbols__text { font-size: .98rem; color: var(--t-on-dark-soft); line-height: 1.6; }
+
+/* --- i nove legni -------------------------------------------
+   Tre per tre appena c'è spazio: sono nove, e una griglia 3×3 lo dice
+   meglio di cinque più quattro. */
+
+.woods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 2px;
+  background: rgba(201, 161, 91, .22);
+  border: var(--b-gold-soft);
+}
+
+@media (min-width: 860px) {
+  .woods { grid-template-columns: repeat(3, 1fr); }
+}
+
+.woods__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  background: var(--c-forest);
+}
+
+.woods__ogham {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 40px;
+  color: var(--c-gold);
+}
+
+.woods__name { color: var(--c-white); font-size: 1.2rem; }
+
+.woods__ogam {
+  margin-top: calc(var(--sp-2) * -1);
+  font-size: .72rem;
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-dark-mute);
+}
+
+.woods__text { font-size: .94rem; line-height: 1.55; color: var(--t-on-dark-soft); }
+
+/* Il decimo sta fuori dalla griglia, perché è quello che non ci va. */
+.woods__ban {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+  padding: var(--sp-5);
+  background: var(--c-forest-deep);
+  border-left: 2px solid var(--c-gold);
+}
+
+.woods__ban strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--c-white);
+}
+
+.woods__ban p { font-size: .98rem; color: var(--t-on-dark-soft); }
+
+/* --- campione di tartan ------------------------------------- */
+
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-6);
+  align-items: flex-start;
+}
+
+.swatch {
+  width: 200px;
+  height: 200px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(201, 161, 91, .5);
+  background-color: var(--c-navy);
+  background-image: url("../assets/img/header.jpg");
+  background-size: 760px auto;
+  background-position: 38% 42%;
+}
+
+.swatch__count {
+  margin-top: var(--sp-2);
+  font-size: .95rem;
+  letter-spacing: .16em;
+  color: var(--c-gold-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stesso motivo: accanto a un campione di 200px, in una sezione larga
+   --w-wide questa colonna prenderebbe oltre 800px di testo per riga. */
+.swatch-side {
+  flex: 1 1 17rem;
+  max-width: var(--w-prose);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* --- elenco puntato a rombo --------------------------------- */
+
+.diamond-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+.diamond-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: baseline;
+  color: var(--t-on-dark-soft);
+  font-size: 1.02rem;
+}
+
+/* Il pallino è il trifoglio pieno: sotto i 20px il tratto sparisce,
+   la sagoma piena no. Maschera, così resta colorabile dal token. */
+.diamond-list li::before {
+  content: "";
+  width: 14px; height: 14px;
+  background: var(--c-gold);
+  translate: 0 2px;
+  -webkit-mask: var(--mask-clover) center / contain no-repeat;
+  mask: var(--mask-clover) center / contain no-repeat;
+}
+
+/* --- botanica a tratto -------------------------------------- */
+
+.botanicals { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
+
+.botanicals figure {
+  margin: 0;
+  flex: 1 1 11rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.botanicals svg { width: 82px; height: 82px; color: var(--c-gold); }
+.botanicals figcaption { font-size: .96rem; color: var(--t-on-dark-soft); }
+.botanicals b { display: block; color: var(--c-white); font-weight: 500; font-size: 1.1rem; }
+
+/* --- schede informative ------------------------------------- */
+
+.info-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.info-group__title {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-gold);
+  padding-bottom: var(--sp-2);
+  border-bottom: var(--b-gold-soft);
+}
+
+.info-card__title {
+  font-family: var(--f-display);
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 2px;
+  background: rgba(201, 161, 91, .2);
+  border: var(--b-gold-soft);
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--sp-5);
+  background: var(--c-forest-deep);
+}
+
+.info-card__kind {
+  font-size: .72rem;
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.info-card p { font-size: .98rem; color: var(--t-on-dark-soft); }
+
+.info-card a {
+  font-size: .94rem;
+  color: var(--c-gold-hi);
+  text-underline-offset: 3px;
+}
+
+/* --- tabella dati (portale) --------------------------------- */
+
+.table-scroll { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--f-ui);
+  font-size: var(--fs-sm);
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: var(--b-light);
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--t-on-light-mute);
+  white-space: nowrap;
+}
+
+.table tbody tr:hover { background: rgba(22, 34, 63, .035); }
+.table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+.table__actions {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.code-chip {
+  font-family: var(--f-ui);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: .1em;
+  padding: 4px 10px;
+  background: var(--c-ivory-deep);
+  border: var(--b-light);
+  white-space: nowrap;
+}
+
+/* --- modale ------------------------------------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-5);
+  background: rgba(4, 6, 14, .62);
+}
+
+.modal__panel {
+  width: min(36rem, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: var(--sp-6);
+  background: var(--s-paper);
+  color: var(--t-on-light);
+  border-top: 3px solid var(--c-gold);
+}
+
+.modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+
+.modal__close {
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0 6px;
+  color: var(--t-on-light-mute);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal__foot {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: var(--sp-6);
+}
+
+/* --- toast -------------------------------------------------- */
+
+.toast-host {
+  position: fixed;
+  right: var(--sp-5);
+  bottom: var(--sp-5);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+
+.toast {
+  font-family: var(--f-ui);
+  font-size: var(--fs-sm);
+  padding: 12px 18px;
+  color: var(--c-white);
+  background: var(--c-navy-ink);
+  border-left: 3px solid var(--c-gold);
+  box-shadow: 0 8px 24px rgba(4, 6, 14, .35);
+}
+
+.toast--danger { border-left-color: var(--c-danger); }
+.toast--ok     { border-left-color: var(--c-ok); }
+
+@media (max-width: 560px) {
+  .countdown__unit { min-width: 0; flex: 1; padding: 10px; }
+  .schedule__item  { grid-template-columns: 1fr; gap: 2px; }
+  .schedule__body  { grid-column: 1; }
+  .swatch          { width: 100%; height: 160px; }
+  .toast-host      { left: var(--sp-4); right: var(--sp-4); }
+}

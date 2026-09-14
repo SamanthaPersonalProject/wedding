@@ -1,0 +1,175 @@
+/* =============================================================
+   Base — reset, tipografia, primitive di layout.
+   Solo selettori di elemento e poche utility. Nessun componente.
+   ============================================================= */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* I link interni (#programma, #invito) scorrono invece di saltare.
+     La regola prefers-reduced-motion in fondo al file lo rimette a
+     "auto" per chi non vuole movimento. */
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--s-page);
+  color: var(--t-on-dark);
+  font-family: var(--f-display);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg { max-width: 100%; }
+
+h1, h2, h3, h4 {
+  margin: 0;
+  line-height: var(--lh-tight);
+  text-wrap: balance;
+}
+
+h2 { font-size: var(--fs-2xl); font-weight: 300; }
+h3 { font-size: var(--fs-lg);  font-weight: 500; }
+
+p { margin: 0; }
+
+a { color: inherit; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+:focus-visible {
+  outline: 2px solid var(--c-gold-hi);
+  outline-offset: 3px;
+}
+
+[hidden] { display: none !important; }
+
+/* --- layout ------------------------------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--w-content);
+  margin-inline: auto;
+  padding-inline: var(--sp-5);
+}
+
+.wrap--wide { max-width: var(--w-wide); }
+
+.section { padding-block: var(--sp-8); }
+
+.section--forest { background: var(--c-forest); }
+.section--navy   { background: var(--c-navy-deep); }
+.section--paper  { background: var(--s-paper); color: var(--t-on-light); }
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.stack--tight { gap: var(--sp-3); }
+.stack--loose { gap: var(--sp-6); }
+
+/* --- tipografia di servizio --------------------------------- */
+
+.eyebrow {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.section--paper .eyebrow { color: var(--c-gold-deep); }
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-width: var(--w-prose);
+}
+
+.prose p { color: var(--t-on-dark-soft); }
+.section--paper .prose p { color: var(--t-on-light-soft); }
+
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-7);
+}
+
+.section-head__ornament {
+  width: 46px;
+  height: 46px;
+  color: var(--c-gold);
+}
+
+.text-mute { color: var(--t-on-dark-mute); }
+.section--paper .text-mute { color: var(--t-on-light-mute); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- ornamento: treccia celtica a due capi ------------------- */
+
+.plait {
+  height: 26px;
+  background-color: var(--c-black);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='26' viewBox='0 0 64 26'%3E%3Cg fill='none' stroke='%23C9A15B' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M0 19 C 16 19 16 7 32 7 C 48 7 48 19 64 19'/%3E%3Cpath d='M0 7 C 14 7 18 19 32 19 C 46 19 50 7 64 7'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: 64px 26px;
+  border-block: 1px solid rgba(201, 161, 91, .45);
+}
+
+/* --- ornamento: filetto con trifoglio -----------------------
+   Separa due blocchi dentro la stessa sezione, dove la treccia a
+   tutta larghezza sarebbe troppo. Va usato con dentro
+   <svg class="leaf-rule__mark"><use href="#sym-clover"/></svg>. */
+
+.leaf-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  color: var(--c-gold);
+}
+
+.leaf-rule::before,
+.leaf-rule::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    color-mix(in srgb, currentColor 55%, transparent),
+    transparent);
+}
+
+.leaf-rule__mark {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

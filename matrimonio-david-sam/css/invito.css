@@ -1,0 +1,318 @@
+/* =============================================================
+   Pagina invito personale (invito.html).
+   Una schermata sola: sfondo del matrimonio, i nomi degli ospiti,
+   il codice rivelato e il passaggio al sito.
+   ============================================================= */
+
+.invito-page { background: var(--c-navy-deep); }
+
+.invito {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+/* --- il foglio: sfondo + velo, come l'hero della landing ----- */
+
+.invito__sheet {
+  position: relative;
+  isolation: isolate;
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;
+  padding-block: var(--sp-9) var(--sp-8);
+  background-color: var(--c-navy);
+  background-image: url("../assets/img/header.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* più scuro dell'hero: qui sopra ci va molto più testo */
+.invito__veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(72% 54% at 50% 42%, rgba(16, 26, 60, .34) 0%, rgba(16, 26, 60, .62) 100%),
+    linear-gradient(to bottom, rgba(4, 6, 14, .30), rgba(4, 6, 14, .72));
+}
+
+/* tralci d'angolo: decoro, restano dietro al testo e non si toccano */
+.invito__sprig {
+  position: absolute;
+  top: var(--sp-5);
+  width: clamp(88px, 20vw, 170px);
+  height: auto;
+  color: var(--c-gold);
+  opacity: .5;
+  pointer-events: none;
+}
+
+.invito__sprig--left  { left: var(--sp-4); }
+.invito__sprig--right { right: var(--sp-4); transform: scaleX(-1); }
+
+.invito__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+  margin-block: auto;
+  text-align: center;
+}
+
+.invito__crest { width: 88px; height: 88px; color: var(--c-gold); }
+
+.invito__welcome {
+  font-size: var(--fs-xs);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--c-gold-hi);
+}
+
+.invito__welcome em {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: .92em;
+  font-style: italic;
+  letter-spacing: .12em;
+  text-transform: none;
+  color: var(--t-on-dark-mute);
+}
+
+.invito__names {
+  font-family: var(--f-script);
+  font-size: clamp(2.8rem, 11vw, 4.8rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--c-white);
+}
+
+.invito__amp {
+  display: block;
+  font-size: .46em;
+  line-height: 1.5;
+  color: var(--c-gold-hi);
+}
+
+/* --- a chi è rivolto ---------------------------------------- */
+
+.invito__eyebrow {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.invito__group {
+  font-family: var(--f-display);
+  font-size: var(--fs-2xl);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  color: var(--c-white);
+  text-wrap: balance;
+}
+
+/* i nomi del gruppo, separati da un rombo */
+.invito__guests {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-3);
+  list-style: none;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-dark-soft);
+}
+
+.invito__guests li { display: flex; align-items: center; gap: var(--sp-4); }
+
+.invito__guests li:not(:last-child)::after {
+  content: "\25C6";
+  font-size: .6em;
+  color: var(--c-gold);
+}
+
+.invito__vow {
+  max-width: 34ch;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--t-on-dark-soft);
+  text-wrap: balance;
+}
+
+/* --- quando e dove ------------------------------------------ */
+
+.invito__when {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-block: var(--sp-4);
+  border-block: var(--b-gold);
+  width: min(100%, 30rem);
+}
+
+.invito__date {
+  font-family: var(--f-display);
+  font-size: var(--fs-lg);
+  color: var(--c-white);
+}
+
+.invito__place {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  color: var(--t-on-dark-soft);
+}
+
+.invito__sep { color: var(--c-gold); font-size: .7em; }
+
+.invito__countdown { margin-top: calc(var(--sp-2) * -1); }
+
+.invito__seats {
+  font-size: 1.02rem;
+  color: var(--t-on-dark-soft);
+}
+
+/* --- il codice ---------------------------------------------- */
+
+.invito__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: min(100%, 26rem);
+  margin-top: var(--sp-3);
+  padding: var(--sp-6) var(--sp-5);
+  background: rgba(4, 6, 14, .55);
+  border: var(--b-gold);
+  box-shadow: inset 0 0 0 1px rgba(201, 161, 91, .18);
+}
+
+.invito__code-ornament { width: 68px; height: 68px; color: var(--c-gold); }
+
+.invito__code-label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--c-gold);
+}
+
+.invito__code-value {
+  font-family: var(--f-ui);
+  font-size: clamp(1.5rem, 7vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--c-gold-hi);
+  word-break: break-all;
+}
+
+.invito__code-copy {
+  font-family: var(--f-ui);
+  font-size: var(--fs-xs);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  color: var(--t-on-dark-soft);
+  background: transparent;
+  border: var(--b-gold-soft);
+  cursor: pointer;
+  transition: color .15s ease, background-color .15s ease;
+}
+
+.invito__code-copy:hover {
+  color: var(--c-gold-hi);
+  background: rgba(201, 161, 91, .12);
+}
+
+/* --- passaggio al sito -------------------------------------- */
+
+.invito__go {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.invito__go-hint {
+  max-width: 42ch;
+  font-size: .94rem;
+  line-height: 1.6;
+  color: var(--t-on-dark-mute);
+  text-wrap: pretty;
+}
+
+/* --- attesa ed errori --------------------------------------- */
+
+.invito__loading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-9) var(--sp-5);
+  color: var(--t-on-dark-mute);
+}
+
+.invito__loading-crest {
+  width: 72px;
+  height: 72px;
+  color: var(--c-gold);
+  animation: invito-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes invito-breathe {
+  0%, 100% { opacity: .35; }
+  50%      { opacity: 1; }
+}
+
+.invito__problem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 44ch;
+  margin-top: var(--sp-5);
+  padding: var(--sp-6);
+  background: rgba(4, 6, 14, .55);
+  border: var(--b-gold-soft);
+}
+
+.invito__problem h2 {
+  font-size: var(--fs-lg);
+  color: var(--c-white);
+}
+
+.invito__problem p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--t-on-dark-soft);
+}
+
+.invito__link {
+  font-family: var(--f-ui);
+  font-size: var(--fs-xs);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--t-on-dark-mute);
+  text-decoration: none;
+}
+
+.invito__link:hover { color: var(--c-gold-hi); }
+
+@media (max-width: 560px) {
+  .invito__sheet { padding-block: var(--sp-8) var(--sp-7); }
+  .invito__code { padding: var(--sp-5) var(--sp-4); }
+}

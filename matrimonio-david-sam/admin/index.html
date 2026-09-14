@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portale sposi — David &amp; Samantha</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap">
+
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="sym-triquetra" viewBox="0 0 120 120">
+      <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round">
+        <circle cx="60" cy="60" r="47" stroke-width="1.4" opacity=".55"/>
+        <path d="M60 22 A44 44 0 0 1 92.9 79 A44 44 0 0 1 60 22 Z"/>
+        <path d="M92.9 79 A44 44 0 0 1 27.1 79 A44 44 0 0 1 92.9 79 Z"/>
+        <path d="M27.1 79 A44 44 0 0 1 60 22 A44 44 0 0 1 27.1 79 Z"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============================ ACCESSO ============================ -->
+<div class="login" id="schermata-accesso">
+  <form class="login__panel" id="form-accesso" novalidate>
+    <h1 class="login__title">Portale sposi</h1>
+    <p class="field__hint" id="accesso-modo"></p>
+
+    <div class="field">
+      <label class="field__label" for="email">Email</label>
+      <input class="input" id="email" name="email" type="email" autocomplete="username" required>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">Password</label>
+      <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+
+    <p class="field__error" id="accesso-errore" role="alert" hidden></p>
+
+    <button class="btn btn--gold btn--block" type="submit" id="accesso-invia">Entra</button>
+    <a class="field__hint" href="../">← Torna al sito</a>
+  </form>
+</div>
+
+<!-- ============================ PORTALE ============================ -->
+<div class="admin" id="schermata-portale" hidden>
+  <p class="mode-flag" id="avviso-demo" hidden>
+    <strong>Modalità demo</strong>
+    <span>I dati stanno solo in questo browser. Compila <code>js/config.js</code> con le credenziali Supabase per passare al database vero.</span>
+    <button class="btn btn--quiet btn--sm" type="button" id="reset-demo">Ripristina dati di esempio</button>
+  </p>
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#sym-triquetra"/></svg>
+      <span>David &amp; Samantha</span>
+    </div>
+    <div class="admin__bar-right">
+      <span id="utente-corrente"></span>
+      <a class="btn btn--ghost btn--sm" href="../">Vedi il sito</a>
+      <button class="btn btn--ghost btn--sm" type="button" id="esci">Esci</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sezioni del portale">
+    <button class="tab" type="button" role="tab" id="tab-invitati"  aria-selected="true"  aria-controls="pannello-invitati"  data-panel="invitati">Invitati</button>
+    <button class="tab" type="button" role="tab" id="tab-programma" aria-selected="false" aria-controls="pannello-programma" data-panel="programma">Programma</button>
+    <button class="tab" type="button" role="tab" id="tab-info"      aria-selected="false" aria-controls="pannello-info"      data-panel="info">Info utili</button>
+  </nav>
+
+  <main class="admin__main">
+    <section id="pannello-invitati"  role="tabpanel" aria-labelledby="tab-invitati"></section>
+    <section id="pannello-programma" role="tabpanel" aria-labelledby="tab-programma" hidden></section>
+    <section id="pannello-info"      role="tabpanel" aria-labelledby="tab-info" hidden></section>
+  </main>
+</div>
+
+<script type="module" src="../js/admin/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+/* =============================================================
+   Design tokens — l'unico posto dove vivono colori, scale e ritmi.
+   Nessun valore letterale di colore deve comparire negli altri file.
+   ============================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* --- tartan: campionati dall'immagine dell'invito --- */
+  --c-navy:        #1E2F6C;
+  --c-navy-deep:   #17234F;
+  --c-navy-ink:    #101A3C;
+  --c-teal:        #0E6355;
+  --c-black:       #04060E;
+  --c-forest:      #12331F;
+  --c-forest-deep: #0E2818;
+
+  /* --- metalli e bianchi --- */
+  --c-gold:        #C9A15B;
+  --c-gold-hi:     #EBD6A6;
+  --c-gold-deep:   #9A7434;
+  --c-white:       #FFFFFF;
+  --c-ivory:       #F6F2E9;
+  --c-ivory-deep:  #EDE7DA;
+
+  /* --- semantici (stato) --- */
+  --c-ok:          #3F8F6B;
+  --c-ok-soft:     #E3F1EA;
+  --c-warn:        #B8862A;
+  --c-warn-soft:   #F7EFDB;
+  --c-danger:      #A3252F;
+  --c-danger-soft: #F7E4E5;
+
+  /* --- testo --- */
+  --t-on-dark:        #F4F1E8;
+  --t-on-dark-soft:   rgba(244, 241, 232, .82);
+  --t-on-dark-mute:   #9FB0AE;
+  --t-on-light:       #16223F;
+  --t-on-light-soft:  #3E4A63;
+  --t-on-light-mute:  #6E7889;
+
+  /* --- superfici --- */
+  --s-page:      var(--c-navy-deep);
+  --s-raised:    var(--c-forest);
+  --s-sunken:    var(--c-navy-ink);
+  --s-paper:     var(--c-ivory);
+  --s-paper-2:   var(--c-white);
+
+  /* --- bordi --- */
+  --b-gold:      1px solid rgba(201, 161, 91, .34);
+  --b-gold-soft: 1px solid rgba(201, 161, 91, .20);
+  --b-light:     1px solid rgba(22, 34, 63, .16);
+
+  /* --- tipografia --- */
+  --f-display: "Cormorant Garamond", Garamond, Georgia, "Times New Roman", serif;
+  --f-script:  "Great Vibes", "Cormorant Garamond", cursive;
+  --f-ui:      "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --fs-xs:  0.78rem;
+  --fs-sm:  0.88rem;
+  --fs-md:  1.15rem;
+  --fs-lg:  1.5rem;
+  --fs-xl:  2rem;
+  --fs-2xl: 2.9rem;
+  --fs-3xl: clamp(3.4rem, 13vw, 6.5rem);
+
+  --lh-tight: 1.18;
+  --lh-body:  1.72;
+
+  --ls-label: .24em;
+  --ls-meta:  .18em;
+
+  /* --- spaziature (scala 4px) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 30px;
+  --sp-7: 44px;
+  --sp-8: 64px;
+  --sp-9: 88px;
+
+  /* --- sagome ---
+     Il trifoglio pieno come maschera: il colore resta un token, la forma
+     sta qui una volta sola. viewBox stretto sulla sagoma, così `contain`
+     non lascia margini morti. Stessa foglia di #lf in index.html, ma
+     ripetuta tre volte per esteso: dentro a un data-URI il <use> non
+     viene risolto e la maschera non caricherebbe. */
+  --mask-clover: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='24 13 72 76'%3E%3Cg fill='%23000' stroke='%23000' stroke-width='4' stroke-linejoin='round'%3E%3Cpath d='M60 54C54.5 50.5 46.5 46.5 42.5 40.5C37 31.5 40.5 19.5 49 18C54.5 17 58.5 21.5 60 26.5C61.5 21.5 65.5 17 71 18C79.5 19.5 83 31.5 77.5 40.5C73.5 46.5 65.5 50.5 60 54Z'/%3E%3Cpath transform='rotate(120 60 54)' d='M60 54C54.5 50.5 46.5 46.5 42.5 40.5C37 31.5 40.5 19.5 49 18C54.5 17 58.5 21.5 60 26.5C61.5 21.5 65.5 17 71 18C79.5 19.5 83 31.5 77.5 40.5C73.5 46.5 65.5 50.5 60 54Z'/%3E%3Cpath transform='rotate(240 60 54)' d='M60 54C54.5 50.5 46.5 46.5 42.5 40.5C37 31.5 40.5 19.5 49 18C54.5 17 58.5 21.5 60 26.5C61.5 21.5 65.5 17 71 18C79.5 19.5 83 31.5 77.5 40.5C73.5 46.5 65.5 50.5 60 54Z'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* --- misure --- */
+  /* Larghezza massima del testo corrente. 125ch fanno circa 1100px, cioè
+     quanto una sezione --w-wide: il testo arriva in fondo e non lascia
+     buchi a destra. Il tetto quindi non morde quasi mai — resta lì per
+     gli schermi molto larghi e per --w-content. Da qui dipende anche la
+     larghezza della lista del programma, che si adatta da sola. */
+  --w-prose:   125ch;
+  --w-content: 46rem;
+  --w-wide:    72rem;
+
+  --z-base:    0;
+  --z-sticky:  20;
+  --z-overlay: 40;
+  --z-modal:   50;
+  --z-toast:   60;
+}

@@ -1,0 +1,272 @@
+/* =============================================================
+   Portale sposi — interfaccia di lavoro: si scansiona, non si legge.
+   Fondo chiaro, font di sistema, densità alta.
+   ============================================================= */
+
+.admin {
+  min-height: 100vh;
+  background: var(--s-paper);
+  color: var(--t-on-light);
+  font-family: var(--f-ui);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.admin h1, .admin h2, .admin h3 { font-family: var(--f-display); }
+
+/* --- accesso ------------------------------------------------ */
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-5);
+  background-color: var(--c-navy);
+  background-image: url("../assets/img/header.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.login__panel {
+  width: min(26rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-7) var(--sp-6);
+  background: var(--s-paper);
+  border-top: 3px solid var(--c-gold);
+}
+
+.login__title {
+  font-family: var(--f-display);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  color: var(--t-on-light);
+}
+
+/* --- intestazione ------------------------------------------- */
+
+.admin__bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--c-navy-deep);
+  color: var(--t-on-dark);
+}
+
+.admin__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--f-display);
+  font-size: 1.3rem;
+}
+
+.admin__brand svg { width: 30px; height: 30px; color: var(--c-gold); }
+
+.admin__bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--t-on-dark-mute);
+}
+
+/* --- navigazione a schede ----------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: var(--sp-1);
+  padding-inline: var(--sp-5);
+  background: var(--c-ivory-deep);
+  border-bottom: var(--b-light);
+  overflow-x: auto;
+}
+
+.tab {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 14px 18px;
+  color: var(--t-on-light-mute);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover { color: var(--t-on-light); }
+
+.tab[aria-selected="true"] {
+  color: var(--t-on-light);
+  border-bottom-color: var(--c-gold-deep);
+}
+
+/* --- corpo -------------------------------------------------- */
+
+.admin__main {
+  max-width: var(--w-wide);
+  margin-inline: auto;
+  padding: var(--sp-7) var(--sp-5) var(--sp-9);
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.panel-head h2 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--t-on-light);
+}
+
+.panel-head p {
+  font-family: var(--f-ui);
+  font-size: var(--fs-sm);
+  color: var(--t-on-light-mute);
+}
+
+.panel-actions { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+
+/* --- riepilogo numerico ------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 2px;
+  margin-bottom: var(--sp-6);
+  background: rgba(22, 34, 63, .12);
+  border: var(--b-light);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--s-paper-2);
+}
+
+.stat__value {
+  font-family: var(--f-display);
+  font-size: 2.1rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--t-on-light);
+}
+
+.stat__label {
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--t-on-light-mute);
+}
+
+.stat--ok .stat__value     { color: var(--c-ok); }
+.stat--wait .stat__value   { color: var(--c-warn); }
+.stat--absent .stat__value { color: var(--c-danger); }
+
+/* --- contenitore elenco ------------------------------------- */
+
+.card {
+  background: var(--s-paper-2);
+  border: var(--b-light);
+}
+
+.card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: var(--b-light);
+}
+
+.card__title { font-size: 1.15rem; font-weight: 500; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.toolbar .input,
+.toolbar .select { width: auto; min-width: 12rem; padding: 8px 12px; font-size: var(--fs-sm); }
+
+/* --- righe trascinabili (programma) ------------------------- */
+
+.sortable__item {
+  display: grid;
+  grid-template-columns: auto 5rem 1fr auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: var(--b-light);
+  background: var(--s-paper-2);
+}
+
+.sortable__item:last-child { border-bottom: none; }
+.sortable__item[draggable="true"] { cursor: grab; }
+.sortable__item.is-dragging { opacity: .4; }
+.sortable__item.is-over { box-shadow: inset 0 2px 0 var(--c-gold-deep); }
+
+.sortable__grip { color: var(--t-on-light-mute); font-size: 1.1rem; user-select: none; }
+
+.sortable__time {
+  font-family: var(--f-display);
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-gold-deep);
+}
+
+.sortable__title { font-weight: 500; }
+.sortable__desc  { font-size: var(--fs-sm); color: var(--t-on-light-mute); }
+
+/* --- anteprima messaggio WhatsApp --------------------------- */
+
+.wa-preview {
+  font-family: var(--f-ui);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  padding: var(--sp-4);
+  color: var(--t-on-light-soft);
+  background: var(--c-ok-soft);
+  border-left: 3px solid var(--c-ok);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+/* --- avviso modalità demo ----------------------------------- */
+
+.mode-flag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--c-warn);
+  background: var(--c-warn-soft);
+  border-bottom: 1px solid rgba(184, 134, 42, .3);
+}
+
+@media (max-width: 640px) {
+  .sortable__item { grid-template-columns: auto 1fr; row-gap: var(--sp-2); }
+  .sortable__time { grid-column: 2; }
+  .admin__main    { padding-inline: var(--sp-4); }
+}
