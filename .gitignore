@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+*.log
+
+# La anon key non è un segreto, ma se un giorno servisse una service_role key
+# (script di import, funzioni server) quella NON deve finire nel repository.
+.env
+.env.*
