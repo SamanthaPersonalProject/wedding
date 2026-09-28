@@ -11,7 +11,6 @@
  * @property {number} maxSeats
  * @property {string} phone          - per WhatsApp
  * @property {string} adminNote      - nota privata, mai mostrata all'ospite
- * @property {boolean} needsTransport
  * @property {string|null} respondedAt
  * @property {string} message        - due righe lasciate dagli ospiti
  * @property {string} song
@@ -42,12 +41,20 @@
  * @property {number} position
  * @property {boolean} published
  *
+ * @typedef {Object} DressCodeItem
+ * @property {string} id
+ * @property {string} text           - una riga della lista sul sito
+ * @property {number} position
+ * @property {boolean} published
+ *
  * Metodi attesi da ogni implementazione:
  *
  *   // pubblico (ospiti)
  *   verifyInvite(code)                  -> {invite, timeline, info} | null
  *   submitRsvp(code, payload)           -> Invite
- *   getPublicContent()                  -> {timeline, info}
+ *   getPublicContent()                  -> {timeline, info, dressCode}
+ *                                          (dressCode è null se il database
+ *                                          non ha ancora la tabella)
  *
  *   // riservato (sposi)
  *   signIn(email, password)             -> {email}
@@ -65,6 +72,10 @@
  *   listInfo()                          -> InfoItem[]
  *   saveInfoItem(item)                  -> InfoItem
  *   deleteInfoItem(id)                  -> void
+ *   listDressCode()                     -> DressCodeItem[]
+ *   saveDressCodeItem(item)             -> DressCodeItem
+ *   deleteDressCodeItem(id)             -> void
+ *   reorderDressCode(orderedIds)        -> void
  */
 
 import { usesSupabase } from '../config.js';

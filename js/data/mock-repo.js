@@ -25,10 +25,10 @@ function seed() {
         maxSeats: 3,
         phone: '+39 333 1234567',
         adminNote: 'Zii di David, arrivano il venerdì mattina.',
-        needsTransport: true,
         respondedAt: new Date().toISOString(),
         message: 'Non vediamo l’ora!',
         song: 'The Parting Glass',
+        specialNeeds: 'Un seggiolone per Emma, grazie.',
         guests: [
           { id: uid(), inviteId: inviteA, name: 'Marco Rossi', isChild: false, status: 'confermato', diet: '' },
           { id: uid(), inviteId: inviteA, name: 'Chiara Rossi', isChild: false, status: 'confermato', diet: 'Senza glutine' },
@@ -42,10 +42,10 @@ function seed() {
         maxSeats: 2,
         phone: '+39 347 7654321',
         adminNote: '',
-        needsTransport: false,
         respondedAt: null,
         message: '',
         song: '',
+        specialNeeds: '',
         guests: [
           { id: uid(), inviteId: inviteB, name: 'Luca Bianchi', isChild: false, status: 'in_attesa', diet: '' },
           { id: uid(), inviteId: inviteB, name: 'Accompagnatore', isChild: false, status: 'in_attesa', diet: '' },
@@ -74,7 +74,13 @@ function seed() {
       { id: uid(), category: 'Dove dormire', title: 'Camere convenzionate', position: 2, published: true, url: '',
         description: 'Abbiamo bloccato alcune camere a tariffa ridotta. Prenotate entro marzo 2027 citando “David & Samantha”.' },
       { id: uid(), category: 'Trasporto', title: 'Navetta serale', position: 3, published: true, url: '',
-        description: 'Navetta gratuita dal lago agli hotel convenzionati, partenze all’01:00 e alle 02:00. Segnalatecelo nell’RSVP.' },
+        description: 'Navetta gratuita dal lago agli hotel convenzionati, partenze all’01:00 e alle 02:00.' },
+    ],
+
+    dressCode: [
+      { id: uid(), text: 'Abito formale o informale, da rievocatore o in kilt. Sentitevi liberi..a patto che non vi vestiate da soldati Romani!', position: 1, published: true },
+      { id: uid(), text: 'Tacchi bassi o larghi, scarpe da ginnastica, ciabatte o infradito: la cerimonia è sul prato in riva all’acqua.', position: 2, published: true },
+      { id: uid(), text: 'Scarpe comode per il céilí. Parliamo sul serio.', position: 3, published: true },
     ],
   };
 }
@@ -82,7 +88,15 @@ function seed() {
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const stored = JSON.parse(raw);
+      // Dati salvati prima che esistesse il dress code: si integra il seme.
+      if (!stored.dressCode) {
+        stored.dressCode = seed().dressCode;
+        save(stored);
+      }
+      return stored;
+    }
   } catch {
     // storage non disponibile o dato corrotto: si riparte dal seme
   }
@@ -142,6 +156,7 @@ export function createMockRepository() {
       return {
         timeline: clone(published(state.timeline)),
         info: clone(published(state.info)),
+        dressCode: clone(published(state.dressCode)),
       };
     },
 
@@ -157,9 +172,9 @@ export function createMockRepository() {
         guest.diet = answer.diet || '';
       }
 
-      invite.needsTransport = Boolean(payload.needsTransport);
       invite.message = payload.message || '';
       invite.song = payload.song || '';
+      invite.specialNeeds = payload.specialNeeds || '';
       invite.respondedAt = new Date().toISOString();
 
       persist();
@@ -211,6 +226,7 @@ export function createMockRepository() {
         respondedAt: null,
         message: '',
         song: '',
+        specialNeeds: '',
         guests: [],
       };
       state.invites.push(invite);
@@ -313,6 +329,43 @@ export function createMockRepository() {
     async deleteInfoItem(id) {
       requireAuth();
       state.info = state.info.filter((item) => item.id !== id);
+      persist();
+    },
+
+    /* ---------------- dress code ---------------- */
+
+    async listDressCode() {
+      requireAuth();
+      return clone(state.dressCode).sort(byPosition);
+    },
+
+    async saveDressCodeItem(data) {
+      requireAuth();
+      if (data.id) {
+        const item = state.dressCode.find((entry) => entry.id === data.id);
+        if (!item) throw new DataError('Voce non trovata.');
+        Object.assign(item, data);
+        persist();
+        return clone(item);
+      }
+      const item = { ...data, id: uid(), position: state.dressCode.length + 1 };
+      state.dressCode.push(item);
+      persist();
+      return clone(item);
+    },
+
+    async deleteDressCodeItem(id) {
+      requireAuth();
+      state.dressCode = state.dressCode.filter((item) => item.id !== id);
+      persist();
+    },
+
+    async reorderDressCode(orderedIds) {
+      requireAuth();
+      orderedIds.forEach((id, index) => {
+        const item = state.dressCode.find((entry) => entry.id === id);
+        if (item) item.position = index + 1;
+      });
       persist();
     },
 

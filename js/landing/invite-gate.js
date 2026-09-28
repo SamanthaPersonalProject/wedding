@@ -84,7 +84,7 @@ export function createInviteGate(container, repo) {
 
     const guestRows = invite.guests.map(buildGuestRow);
 
-    const transport = el('input', { type: 'checkbox', id: 'navetta', name: 'navetta', checked: invite.needsTransport });
+    const specialNeeds = el('textarea', { class: 'textarea', id: 'esigenze', name: 'esigenze', rows: 3 }, invite.specialNeeds || '');
     const song = el('input', { class: 'input', id: 'canzone', name: 'canzone', type: 'text', value: invite.song || '' });
     const message = el('textarea', { class: 'textarea', id: 'messaggio', name: 'messaggio' }, invite.message || '');
 
@@ -110,7 +110,7 @@ export function createInviteGate(container, repo) {
         try {
           const saved = await repo.submitRsvp(invite.code, {
             guests: answers,
-            needsTransport: transport.checked,
+            specialNeeds: specialNeeds.value.trim(),
             song: song.value.trim(),
             message: message.value.trim(),
           });
@@ -126,7 +126,9 @@ export function createInviteGate(container, repo) {
       el('div', { class: 'guest-list' }, guestRows.map((row) => row.node)),
 
       el('div', { class: 'field' }, [
-        el('label', { class: 'check', for: 'navetta' }, [transport, el('span', {}, 'Ci serve la navetta serale per rientrare in hotel')]),
+        el('label', { class: 'field__label', for: 'esigenze' }, 'C’è qualcosa che dobbiamo sapere per accogliervi bene?'),
+        specialNeeds,
+        el('p', { class: 'field__hint' }, 'Difficoltà a camminare sul prato, un seggiolone, un arrivo in ritardo: qualsiasi cosa ci aiuti a organizzarci.'),
       ]),
 
       el('div', { class: 'field' }, [
@@ -181,8 +183,8 @@ export function createInviteGate(container, repo) {
       class: 'input',
       type: 'text',
       value: guest.diet || '',
-      placeholder: 'Allergie o preferenze a tavola',
-      'aria-label': `Allergie o preferenze di ${guest.name}`,
+      placeholder: 'Allergie, intolleranze o dieta particolare',
+      'aria-label': `Allergie, intolleranze o dieta di ${guest.name}`,
     });
 
     const extra = el('div', { class: 'guest-row__extra', hidden: guest.status !== 'confermato' }, diet);
@@ -225,7 +227,6 @@ export function createInviteGate(container, repo) {
         coming.length
           ? el('p', {}, `Abbiamo segnato ${plural(coming.length, 'posto', 'posti')} a nome di ${invite.groupName}: ${coming.map((guest) => guest.name).join(', ')}.`)
           : el('p', {}, 'Ci mancherete. Se cambia qualcosa, potete rientrare con lo stesso codice.'),
-        invite.needsTransport ? el('p', {}, 'Vi teniamo un posto sulla navetta serale.') : null,
         el('p', {}, `Si può modificare fino al ${formatDateLong(config.wedding.rsvpDeadline)}.`),
       ]),
       el('button', {

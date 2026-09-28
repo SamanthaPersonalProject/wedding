@@ -35,10 +35,10 @@ const toInvite = (row) => ({
   maxSeats: row.posti_max,
   phone: row.telefono ?? '',
   adminNote: row.nota_admin ?? '',
-  needsTransport: row.navetta ?? false,
   respondedAt: row.risposto_il,
   message: row.messaggio ?? '',
   song: row.canzone ?? '',
+  specialNeeds: row.esigenze ?? '',
   guests: (row.ospiti ?? []).map(toGuest),
 });
 
@@ -61,6 +61,13 @@ const toInfoItem = (row) => ({
   published: row.pubblicato,
 });
 
+const toDressCodeItem = (row) => ({
+  id: row.id,
+  text: row.testo,
+  position: row.posizione,
+  published: row.pubblicato,
+});
+
 /* ---------------- mappatura applicazione → DB ---------------- */
 
 const fromInvite = (invite) => ({
@@ -69,7 +76,6 @@ const fromInvite = (invite) => ({
   posti_max: Number(invite.maxSeats) || 1,
   telefono: invite.phone || null,
   nota_admin: invite.adminNote || null,
-  navetta: Boolean(invite.needsTransport),
 });
 
 const fromGuest = (guest) => ({
@@ -93,6 +99,12 @@ const fromInfoItem = (item) => ({
   titolo: item.title,
   descrizione: item.description || null,
   url: item.url || null,
+  posizione: item.position ?? 999,
+  pubblicato: item.published !== false,
+});
+
+const fromDressCodeItem = (item) => ({
+  testo: item.text,
   posizione: item.position ?? 999,
   pubblicato: item.published !== false,
 });
@@ -143,6 +155,9 @@ export async function createSupabaseRepository() {
       return {
         timeline: (data?.programma ?? []).map(toTimelineItem),
         info: (data?.info ?? []).map(toInfoItem),
+        // null (non []) quando la funzione SQL è quella vecchia, senza
+        // dress code: la pagina tiene il testo statico invece di svuotarlo.
+        dressCode: data?.dress_code ? data.dress_code.map(toDressCodeItem) : null,
       };
     },
 
@@ -151,9 +166,9 @@ export async function createSupabaseRepository() {
         p_codice: normalizeCode(rawCode),
         p_risposta: {
           ospiti: payload.guests.map((guest) => ({ id: guest.id, stato: guest.status, dieta: guest.diet || null })),
-          navetta: Boolean(payload.needsTransport),
           messaggio: payload.message || null,
           canzone: payload.song || null,
+          esigenze: payload.specialNeeds || null,
         },
       });
       guard(error, 'Non siamo riusciti a salvare la risposta. Riprova tra poco.');
@@ -284,6 +299,38 @@ export async function createSupabaseRepository() {
     async deleteInfoItem(id) {
       const { error } = await db.from('info_utili').delete().eq('id', id);
       guard(error, 'Non riusciamo a eliminare la scheda.');
+    },
+
+    /* ---------------- dress code ---------------- */
+
+    async listDressCode() {
+      const { data, error } = await db.from('dress_code').select('*').order('posizione');
+      guard(error, 'Non riusciamo a caricare il dress code.');
+      return (data ?? []).map(toDressCodeItem);
+    },
+
+    async saveDressCodeItem(item) {
+      const payload = fromDressCodeItem(item);
+
+      if (item.id) {
+        const { data, error } = await db.from('dress_code').update(payload).eq('id', item.id).select().single();
+        guard(error, 'Non riusciamo a salvare la voce.');
+        return toDressCodeItem(data);
+      }
+
+      const { data, error } = await db.from('dress_code').insert(payload).select().single();
+      guard(error, 'Non riusciamo ad aggiungere la voce.');
+      return toDressCodeItem(data);
+    },
+
+    async deleteDressCodeItem(id) {
+      const { error } = await db.from('dress_code').delete().eq('id', id);
+      guard(error, 'Non riusciamo a eliminare la voce.');
+    },
+
+    async reorderDressCode(orderedIds) {
+      const { error } = await db.rpc('riordina_dress_code', { p_ids: orderedIds });
+      guard(error, 'Non riusciamo a salvare il nuovo ordine.');
     },
   };
 }

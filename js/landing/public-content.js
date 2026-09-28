@@ -52,3 +52,14 @@ export function renderInfo(container, items) {
       ]))),
     ])));
 }
+
+/**
+ * Le righe del dress code. La lista statica in pagina resta come riserva:
+ * si sostituisce solo quando i dati arrivano davvero.
+ */
+export function renderDressCode(container, items) {
+  if (!Array.isArray(items)) return;
+
+  render(container, items.map((item) =>
+    el('li', {}, el('span', {}, item.text))));
+}

@@ -38,7 +38,6 @@ export function createGuestsPanel(root, repo) {
     const confirmed = guests.filter((guest) => guest.status === 'confermato');
     const waiting = guests.filter((guest) => guest.status === 'in_attesa');
     const absent = guests.filter((guest) => guest.status === 'assente');
-    const transport = invites.filter((invite) => invite.needsTransport).length;
 
     const stat = (value, label, variant = '') =>
       el('div', { class: `stat ${variant}` }, [
@@ -51,7 +50,6 @@ export function createGuestsPanel(root, repo) {
       stat(confirmed.length, 'confermati', 'stat--ok'),
       stat(waiting.length, 'in attesa', 'stat--wait'),
       stat(absent.length, 'non vengono', 'stat--absent'),
-      stat(transport, 'chiedono la navetta'),
     ]);
   }
 
@@ -78,11 +76,11 @@ export function createGuestsPanel(root, repo) {
       el('td', {}, [
         el('div', { style: 'font-weight:500' }, invite.groupName),
         invite.adminNote ? el('div', { style: 'color:var(--t-on-light-mute)' }, invite.adminNote) : null,
+        invite.specialNeeds ? el('div', { style: 'color:var(--t-on-light-mute)' }, `Esigenze: ${invite.specialNeeds}`) : null,
       ]),
       el('td', {}, el('span', { class: 'code-chip' }, invite.code)),
       el('td', {}, el('span', { class: `badge ${meta.className}` }, meta.label)),
       el('td', { class: 'num' }, `${confirmed}/${invite.guests.length}`),
-      el('td', {}, invite.needsTransport ? 'Navetta' : '—'),
       el('td', {}, el('div', { class: 'table__actions' }, [
         el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => editGuests(invite) }, 'Ospiti'),
         el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => editInvite(invite) }, 'Modifica'),
@@ -112,7 +110,6 @@ export function createGuestsPanel(root, repo) {
         el('th', {}, 'Codice'),
         el('th', {}, 'Stato'),
         el('th', { class: 'num' }, 'Conf.'),
-        el('th', {}, 'Trasporto'),
         el('th', {}, ''),
       ])),
       el('tbody', {}, rows.map(rowNode)),
@@ -201,7 +198,7 @@ export function createGuestsPanel(root, repo) {
     }
 
     try {
-      await repo.saveInvite({ ...values, id: invite?.id, needsTransport: invite?.needsTransport ?? false });
+      await repo.saveInvite({ ...values, id: invite?.id });
       toast(isNew ? 'Gruppo creato.' : 'Modifiche salvate.', 'ok');
       await reload();
     } catch (err) {

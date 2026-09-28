@@ -5,6 +5,7 @@ import { getRepository, isDemoMode } from '../data/repository.js';
 import { createGuestsPanel } from './guests.js';
 import { createTimelinePanel } from './timeline.js';
 import { createInfoPanel } from './info.js';
+import { createDressCodePanel } from './dresscode.js';
 
 const loginScreen = $('#schermata-accesso');
 const appScreen = $('#schermata-portale');
@@ -68,6 +69,7 @@ async function enterApp(user) {
     invitati: createGuestsPanel($('#pannello-invitati'), repo),
     programma: createTimelinePanel($('#pannello-programma'), repo),
     info: createInfoPanel($('#pannello-info'), repo),
+    dresscode: createDressCodePanel($('#pannello-dresscode'), repo),
   };
 
   setupTabs();

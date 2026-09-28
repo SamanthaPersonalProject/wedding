@@ -9,11 +9,15 @@
   isolation: isolate;
   overflow: hidden;
   text-align: center;
-  /* Altezza fissa della testata: il contenuto vi sta centrato dentro,
-     quindi niente padding verticale che la farebbe crescere. */
+  /* La testata segue le proporzioni dell'immagine (1366×768), così la
+     composizione — fiori agli angoli, nastri — resta intera. Il minimo
+     di 750px tiene la scena piena sugli schermi meno larghi, dove un
+     ritaglio moderato è inevitabile. */
   display: grid;
   align-content: center;
-  height: 750px;
+  height: auto;
+  min-height: 750px;
+  aspect-ratio: 1366 / 768;
   background-color: var(--c-navy);
   background-image: url("../assets/img/header.jpg");
   background-size: cover;
@@ -311,6 +315,25 @@
 .site-footer__admin-link:hover { color: var(--c-gold-hi); }
 
 @media (max-width: 720px) {
+  /* Sul telefono l'immagine è orizzontale e lo schermo verticale: con
+     `cover` se ne vedrebbe solo una striscia centrale. Qui invece si
+     mostra intera in cima, e il testo scende sotto, sul blu pieno; il
+     velo diventa una sfumatura che fonde il bordo basso dell'immagine
+     nel colore di fondo. */
+  .hero {
+    min-height: 0;
+    aspect-ratio: auto;
+    padding-block: calc(100vw * 768 / 1366) var(--sp-8);
+    background-size: 100% auto;
+    background-position: top center;
+  }
+
+  .hero::after {
+    background: linear-gradient(to bottom,
+      transparent calc(100vw * 768 / 1366 - 56px),
+      var(--c-navy) calc(100vw * 768 / 1366));
+  }
+
   .storia { grid-template-columns: 1fr; }
   .storia__figure { max-width: 22rem; }
 }

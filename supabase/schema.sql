@@ -24,14 +24,22 @@ create table if not exists public.inviti (
   posti_max   integer not null default 1 check (posti_max between 1 and 12),
   telefono    text,
   nota_admin  text,                       -- privata: mai esposta agli ospiti
-  navetta     boolean not null default false,
   messaggio   text,
   canzone     text,
+  esigenze    text,                       -- scritta dagli ospiti: mobilità, seggiolone, esigenze varie
   risposto_il timestamptz,
   creato_il   timestamptz not null default now()
 );
 
 comment on column public.inviti.nota_admin is 'Nota privata degli sposi. Le funzioni per gli ospiti non la restituiscono mai.';
+
+-- Migrazione per i database creati prima del campo esigenze.
+alter table public.inviti add column if not exists esigenze text;
+
+-- La richiesta navetta è stata tolta dall'RSVP: via anche la colonna.
+alter table public.inviti drop column if exists navetta;
+
+comment on column public.inviti.esigenze is 'Compilata dagli ospiti nell''RSVP: difficoltà di spostamento, seggiolone, esigenze varie non alimentari.';
 
 create table if not exists public.ospiti (
   id        uuid primary key default gen_random_uuid(),
@@ -95,6 +103,26 @@ end $$;
 create index if not exists info_utili_posizione_idx on public.info_utili (posizione);
 create index if not exists info_utili_categoria_idx on public.info_utili (categoria);
 
+-- Le voci del dress code: righe brevi, in ordine, modificabili dal portale.
+create table if not exists public.dress_code (
+  id         uuid primary key default gen_random_uuid(),
+  testo      text not null,
+  posizione  integer not null default 999,
+  pubblicato boolean not null default true
+);
+
+create index if not exists dress_code_posizione_idx on public.dress_code (posizione);
+
+-- Contenuto iniziale: solo se la tabella è vuota, così rieseguire lo
+-- schema non duplica né sovrascrive le modifiche fatte dal portale.
+insert into public.dress_code (testo, posizione)
+select * from (values
+  ('Abito formale o informale, da rievocatore o in kilt. Sentitevi liberi..a patto che non vi vestiate da soldati Romani!', 1),
+  ('Tacchi bassi o larghi, scarpe da ginnastica, ciabatte o infradito: la cerimonia è sul prato in riva all''acqua.', 2),
+  ('Scarpe comode per il céilí. Parliamo sul serio.', 3)
+) as seme(testo, posizione)
+where not exists (select 1 from public.dress_code);
+
 -- Traccia dei tentativi di codice: serve a bloccare chi prova a indovinare.
 create table if not exists public.tentativi_codice (
   id        bigserial primary key,
@@ -113,6 +141,7 @@ alter table public.inviti            enable row level security;
 alter table public.ospiti            enable row level security;
 alter table public.programma         enable row level security;
 alter table public.info_utili        enable row level security;
+alter table public.dress_code        enable row level security;
 alter table public.tentativi_codice  enable row level security;
 
 -- Gli sposi: accesso pieno. Gli anonimi: nessuna policy, quindi nulla.
@@ -130,6 +159,10 @@ create policy "sposi gestiscono programma" on public.programma
 
 drop policy if exists "sposi gestiscono info" on public.info_utili;
 create policy "sposi gestiscono info" on public.info_utili
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "sposi gestiscono dress code" on public.dress_code;
+create policy "sposi gestiscono dress code" on public.dress_code
   for all to authenticated using (true) with check (true);
 
 drop policy if exists "sposi leggono tentativi" on public.tentativi_codice;
@@ -196,9 +229,9 @@ begin
       'codice',      v_invito.codice,
       'nome_gruppo', v_invito.nome_gruppo,
       'posti_max',   v_invito.posti_max,
-      'navetta',     v_invito.navetta,
       'messaggio',   v_invito.messaggio,
       'canzone',     v_invito.canzone,
+      'esigenze',    v_invito.esigenze,
       'risposto_il', v_invito.risposto_il
       -- nota_admin e telefono restano fuori di proposito
     ),
@@ -238,6 +271,10 @@ as $$
     'info', coalesce((
       select jsonb_agg(to_jsonb(i) order by i.posizione)
       from public.info_utili i where i.pubblicato
+    ), '[]'::jsonb),
+    'dress_code', coalesce((
+      select jsonb_agg(to_jsonb(d) order by d.posizione)
+      from public.dress_code d where d.pubblicato
     ), '[]'::jsonb)
   );
 $$;
@@ -268,9 +305,9 @@ begin
      and r.stato in ('in_attesa', 'confermato', 'assente');
 
   update public.inviti
-     set navetta     = coalesce((p_risposta ->> 'navetta')::boolean, navetta),
-         messaggio   = nullif(p_risposta ->> 'messaggio', ''),
+     set messaggio   = nullif(p_risposta ->> 'messaggio', ''),
          canzone     = nullif(p_risposta ->> 'canzone', ''),
+         esigenze    = nullif(p_risposta ->> 'esigenze', ''),
          risposto_il = now()
    where id = v_invito.id
   returning * into v_invito;
@@ -281,9 +318,9 @@ begin
       'codice',      v_invito.codice,
       'nome_gruppo', v_invito.nome_gruppo,
       'posti_max',   v_invito.posti_max,
-      'navetta',     v_invito.navetta,
       'messaggio',   v_invito.messaggio,
       'canzone',     v_invito.canzone,
+      'esigenze',    v_invito.esigenze,
       'risposto_il', v_invito.risposto_il
     ),
     'ospiti', coalesce((
@@ -311,6 +348,20 @@ begin
 end;
 $$;
 
+-- Riordino del dress code, stesso meccanismo del programma.
+create or replace function public.riordina_dress_code(p_ids uuid[])
+returns void
+language plpgsql
+security invoker                            -- passa da RLS: solo gli sposi
+as $$
+begin
+  update public.dress_code d
+     set posizione = sub.ord
+    from (select unnest(p_ids) as id, generate_subscripts(p_ids, 1) as ord) sub
+   where d.id = sub.id;
+end;
+$$;
+
 -- ---------------------------------------------------------------
 --  Permessi di esecuzione
 -- ---------------------------------------------------------------
@@ -319,8 +370,10 @@ revoke all on function public.verifica_invito(text)          from public;
 revoke all on function public.conferma_invito(text, jsonb)   from public;
 revoke all on function public.contenuti_pubblici()           from public;
 revoke all on function public.riordina_programma(uuid[])     from public;
+revoke all on function public.riordina_dress_code(uuid[])    from public;
 
 grant execute on function public.verifica_invito(text)        to anon, authenticated;
 grant execute on function public.conferma_invito(text, jsonb) to anon, authenticated;
 grant execute on function public.contenuti_pubblici()         to anon, authenticated;
 grant execute on function public.riordina_programma(uuid[])   to authenticated;
+grant execute on function public.riordina_dress_code(uuid[])  to authenticated;

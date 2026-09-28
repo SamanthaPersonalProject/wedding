@@ -4,7 +4,7 @@ import { $, $$ } from '../lib/dom.js';
 import { config } from '../config.js';
 import { getRepository } from '../data/repository.js';
 import { startCountdown } from './countdown.js';
-import { renderTimeline, renderInfo } from './public-content.js';
+import { renderTimeline, renderInfo, renderDressCode } from './public-content.js';
 import { createInviteGate } from './invite-gate.js';
 import { createTabs } from './tabs.js';
 
@@ -19,12 +19,16 @@ async function boot() {
 
   const timelineRegion = $('[data-region="timeline"]');
   const infoRegion = $('[data-region="info"]');
+  const dressCodeRegion = $('[data-region="dresscode"]');
   const inviteRegion = $('[data-region="invite"]');
 
   try {
-    const { timeline, info } = await repo.getPublicContent();
+    const { timeline, info, dressCode } = await repo.getPublicContent();
     renderTimeline(timelineRegion, timeline);
     renderInfo(infoRegion, info);
+    // Se il database non ha ancora il dress code (dressCode è null),
+    // in pagina resta la lista statica.
+    renderDressCode(dressCodeRegion, dressCode);
   } catch {
     renderTimeline(timelineRegion, []);
     renderInfo(infoRegion, []);

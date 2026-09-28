@@ -311,6 +311,18 @@
 
 .tabs__intro { margin-bottom: var(--sp-6); }
 
+/* Una scheda può contenere più di un blocco. Senza aria sopra, la
+   seconda griglia si incolla alla prima e sembrano un elenco solo. */
+.tabs__subhead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-8);
+  margin-bottom: var(--sp-4);
+}
+
+.tabs__subhead h3 { color: var(--c-white); font-size: var(--fs-lg); }
+
 /* Quando le schede non ci stanno in riga la striscia scorre, e senza un
    segno non si capisce. Le classi le mette js/landing/tabs.js in base a
    dov'è lo scorrimento, così la sfumatura sparisce agli estremi invece
@@ -355,7 +367,15 @@
   background: var(--c-forest);
 }
 
-.symbols__icon { width: 82px; height: 82px; color: var(--c-gold); }
+/* i simboli sono render fotografici scontornati (PNG con alfa), non
+   più tratti SVG: object-fit tiene le proporzioni dentro il quadrato
+   e l'ombra li stacca dal verde della scheda. */
+.symbols__icon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .45));
+}
 .symbols__name { color: var(--c-white); font-size: 1.28rem; }
 
 .symbols__gaelic {
