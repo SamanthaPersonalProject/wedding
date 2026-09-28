@@ -69,7 +69,7 @@ function seed() {
     ],
 
     info: [
-      { id: uid(), category: 'Buono a sapersi', title: 'Come arrivare al Lago Bagatol', position: 1, published: true, url: '',
+      { id: uid(), category: 'Buono a sapersi', title: 'Come arrivare al Chalet del Bonis', position: 1, published: true, url: '',
         description: 'Parcheggio interno riservato agli ospiti. L’ultimo tratto è sterrato: andate piano e lasciate perdere le scarpe chiare.' },
       { id: uid(), category: 'Dove dormire', title: 'Camere convenzionate', position: 2, published: true, url: '',
         description: 'Abbiamo bloccato alcune camere a tariffa ridotta. Prenotate entro marzo 2027 citando “David & Samantha”.' },
