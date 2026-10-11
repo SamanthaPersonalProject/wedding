@@ -22,10 +22,10 @@ export const config = {
     coupleFirst: 'David',
     coupleSecond: 'Samantha',
     /** ISO con fuso: è l'ora della cerimonia. */
-    dateTime: '2027-05-21T16:30:00+02:00',
+    dateTime: '2027-05-21T15:00:00+02:00',
     venue: 'Chalet del Bonis',
     /** Ultimo giorno utile per l'RSVP. */
-    rsvpDeadline: '2027-03-21',
+    rsvpDeadline: '2027-01-21',
     /** Base del link invito: si può lasciare vuoto, viene dedotto. */
     siteUrl: '',
   },
