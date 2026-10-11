@@ -40,8 +40,6 @@ function frame(...content) {
 
   return el('div', { class: 'invito__sheet' }, [
     el('div', { class: 'invito__veil', 'aria-hidden': 'true' }),
-    sprig('left'),
-    sprig('right'),
     el('div', { class: 'wrap invito__inner' }, [
       icon('sym-triquetra', 'invito__crest'),
       el('p', { class: 'invito__welcome' }, [
