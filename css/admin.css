@@ -197,6 +197,9 @@
 
 .card__title { font-size: 1.15rem; font-weight: 500; }
 
+/* Per i riquadri senza righe, dove il contenuto starebbe appiccicato. */
+.card--pad { padding: var(--sp-5); }
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -234,7 +237,82 @@
 }
 
 .sortable__title { font-weight: 500; }
-.sortable__desc  { font-size: var(--fs-sm); color: var(--t-on-light-mute); }
+.sortable__desc  { font-size: var(--fs-sm); color: var(--t-on-light-mute); word-break: break-word; }
+
+/* --- frecce su/giù ------------------------------------------
+   Il trascinamento HTML5 non esiste sui touch: sul telefono queste
+   sono l'unico modo di riordinare, quindi restano sempre visibili. */
+
+.move-arrows {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.btn--icon {
+  padding-inline: 10px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.btn--icon:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+/* --- miniature della galleria ------------------------------- */
+
+.thumb {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  background: var(--c-ivory-deep);
+  border: var(--b-light);
+}
+
+.thumb--lg {
+  width: 100%;
+  height: auto;
+  max-height: 16rem;
+  object-fit: contain;
+  background: var(--c-ivory-deep);
+}
+
+.thumb--broken {
+  display: grid;
+  place-items: center;
+  color: var(--c-warn);
+  font-size: 1.2rem;
+}
+
+/* --- player Spotify nel portale ----------------------------- */
+
+.spotify-embed {
+  display: block;
+  max-width: 34rem;
+}
+
+/* --- elenco ospiti dentro le modali -------------------------
+   Nel sito pubblico esiste `.guest-row`, che è un'altra cosa: quella
+   sta in landing.css e qui non arriva. */
+
+.guest-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-block: var(--sp-2);
+  border-bottom: var(--b-light);
+}
+
+.guest-line:last-child { border-bottom: none; }
+
+.guest-line__meta {
+  font-size: var(--fs-xs);
+  color: var(--t-on-light-mute);
+}
+
+/* Lo stesso suggerimento, ma quando segnala qualcosa che non torna. */
+.field__hint--warn { color: var(--c-warn); }
 
 /* --- anteprima messaggio WhatsApp --------------------------- */
 

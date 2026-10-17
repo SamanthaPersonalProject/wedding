@@ -4,9 +4,15 @@
  *
  * Le categorie sono testo libero, decise dagli sposi: il campo propone
  * quelle già usate ma non impedisce di scriverne una nuova.
+ *
+ * L'ordine è uno solo — quello delle schede — e le categorie ci stanno
+ * dentro: una categoria sta dove sta la sua prima scheda. Spostare un
+ * blocco di schede sposta quindi la categoria, senza doverne salvare
+ * l'ordine da qualche altra parte.
  */
 
 import { el, render, modal, confirmDialog, toast, formValues } from '../lib/dom.js';
+import { createDragSort, moveToward, moveBy, moveButtons } from './sortable.js';
 
 const DEFAULT_CATEGORY = 'Buono a sapersi';
 
@@ -158,11 +164,54 @@ export function createInfoPanel(root, repo) {
     }
   }
 
+  /* ---------------- ordine ---------------- */
+
+  /** Le schede di tutti i gruppi, riappiattite nell'ordine mostrato. */
+  const flatten = (groups) => [...groups.values()].flat();
+
+  async function persistOrder(ordered) {
+    items = ordered;
+    draw();
+    try {
+      await repo.reorderInfo(items.map((entry) => entry.id));
+    } catch (err) {
+      toast(err.message, 'danger');
+      await reload();
+    }
+  }
+
+  /** Sposta una scheda dentro la sua categoria. */
+  function moveCard(category, mover) {
+    const groups = usedCategories(items);
+    groups.set(category, mover(groups.get(category)));
+    persistOrder(flatten(groups));
+  }
+
+  /** Sposta un'intera categoria su o giù, con tutte le sue schede. */
+  function moveCategory(category, delta) {
+    const groups = usedCategories(items);
+    const names = moveBy([...groups.keys()].map((name) => ({ id: name })), category, delta)
+      .map((entry) => entry.id);
+    persistOrder(names.flatMap((name) => groups.get(name)));
+  }
+
+  // Trascinare una scheda sopra una di un'altra categoria non sposta
+  // niente: le categorie si spostano intere, con le loro frecce.
+  const dragAttrs = createDragSort((draggedId, targetId) => {
+    const category = (id) => items.find((entry) => entry.id === id)?.category?.trim() || DEFAULT_CATEGORY;
+    const from = category(draggedId);
+    if (from !== category(targetId)) {
+      toast('Le schede si spostano dentro la loro categoria. Per cambiarle categoria, aprile e modifica il campo.', 'info');
+      return;
+    }
+    moveCard(from, (list) => moveToward(list, draggedId, targetId));
+  });
+
   /* ---------------- disegno ---------------- */
 
-  function cardNode(item) {
-    return el('div', { class: 'sortable__item' }, [
-      el('span', { class: 'sortable__grip', 'aria-hidden': 'true' }, '·'),
+  function cardNode(item, index, group) {
+    return el('div', { class: 'sortable__item', ...dragAttrs(item.id) }, [
+      el('span', { class: 'sortable__grip', 'aria-hidden': 'true' }, '⠿'),
       el('span', {}),
       el('div', {}, [
         el('div', { class: 'sortable__title' }, [
@@ -172,18 +221,28 @@ export function createInfoPanel(root, repo) {
         item.description ? el('div', { class: 'sortable__desc' }, item.description) : null,
         item.url ? el('a', { class: 'sortable__desc', href: item.url, target: '_blank', rel: 'noopener noreferrer' }, item.url) : null,
       ]),
-      el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => edit(item) }, 'Modifica'),
+      el('div', { class: 'table__actions' }, [
+        moveButtons({
+          index,
+          total: group.length,
+          label: item.title,
+          onMove: (delta) => moveCard(item.category?.trim() || DEFAULT_CATEGORY,
+            (list) => moveBy(list, item.id, delta)),
+        }),
+        el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => edit(item) }, 'Modifica'),
+      ]),
     ]);
   }
 
   function draw() {
     const groups = usedCategories(items);
+    const names = [...groups.keys()];
 
     render(root,
       el('div', { class: 'panel-head' }, [
         el('div', {}, [
           el('h2', {}, 'Info utili'),
-          el('p', {}, 'Compaiono nella sezione “Info pratiche” del sito, raggruppate per categoria.'),
+          el('p', {}, 'Compaiono nella sezione “Info pratiche” del sito, raggruppate per categoria. Le frecce accanto al titolo spostano la categoria intera; dentro, le schede si trascinano o si spostano con le loro frecce.'),
         ]),
         el('div', { class: 'panel-actions' }, [
           el('button', { class: 'btn btn--gold btn--sm', type: 'button', onClick: () => edit(null) }, 'Nuova scheda'),
@@ -191,10 +250,19 @@ export function createInfoPanel(root, repo) {
       ]),
 
       items.length
-        ? el('div', { class: 'stack' }, [...groups.entries()].map(([name, list]) =>
-            el('div', { class: 'card' }, [
+        ? el('div', { class: 'stack' }, names.map((name, groupIndex) => {
+            const list = groups.get(name);
+            return el('div', { class: 'card' }, [
               el('div', { class: 'card__head' }, [
-                el('h3', { class: 'card__title' }, name),
+                el('div', { class: 'toolbar' }, [
+                  moveButtons({
+                    index: groupIndex,
+                    total: names.length,
+                    label: `la categoria ${name}`,
+                    onMove: (delta) => moveCategory(name, delta),
+                  }),
+                  el('h3', { class: 'card__title' }, name),
+                ]),
                 el('div', { class: 'toolbar' }, [
                   el('span', { class: 'field__hint' }, `${list.length} ${list.length === 1 ? 'scheda' : 'schede'}`),
                   el('button', {
@@ -203,8 +271,9 @@ export function createInfoPanel(root, repo) {
                   }, 'Rinomina categoria'),
                 ]),
               ]),
-              ...list.map(cardNode),
-            ])))
+              ...list.map((item, index) => cardNode(item, index, list)),
+            ]);
+          }))
         : el('div', { class: 'card' }, el('div', { class: 'empty' }, [
             el('p', {}, 'Nessuna informazione, ancora.'),
             el('button', { class: 'btn btn--gold btn--sm', type: 'button', onClick: () => edit(null) }, 'Aggiungi la prima scheda'),

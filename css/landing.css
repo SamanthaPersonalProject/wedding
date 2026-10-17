@@ -137,6 +137,119 @@
   background: var(--c-forest-deep);
 }
 
+/* --- slider delle foto --------------------------------------
+   Prende il posto della foto fissa dentro "La nostra storia", e ne
+   eredita la cornice doppia. Con una foto sola restano solo l'immagine
+   e la didascalia: niente frecce, niente pallini. */
+
+.storia__gallery { margin: 0; }
+
+.slider {
+  position: relative;
+  padding: var(--sp-2);
+  border: var(--b-gold);
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 3px;
+}
+
+.slider__viewport {
+  overflow: hidden;
+}
+
+.slider__track {
+  display: flex;
+  transition: transform .45s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider__track { transition: none; }
+}
+
+.slider__slide {
+  flex: 0 0 100%;
+  margin: 0;
+}
+
+.slider__caption {
+  padding-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--t-on-dark-soft);
+  text-align: center;
+}
+
+.slider__arrow {
+  position: absolute;
+  top: 38%;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-family: var(--f-display);
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--t-on-dark);
+  background: rgba(4, 6, 14, .55);
+  border: var(--b-gold);
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.slider__arrow:hover,
+.slider__arrow:focus-visible { background: rgba(4, 6, 14, .85); }
+
+.slider__arrow--prev { left: var(--sp-3); }
+.slider__arrow--next { right: var(--sp-3); }
+
+.slider__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding-top: var(--sp-3);
+}
+
+.slider__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid var(--c-gold);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider__dot[aria-current="true"] { background: var(--c-gold); }
+
+/* --- playlist ------------------------------------------------ */
+
+.playlist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.playlist__player {
+  width: 100%;
+  max-width: 44rem;
+  height: 352px;
+  border: 0;
+  border-radius: 12px;
+}
+
+.playlist__link {
+  font-size: var(--fs-sm);
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .playlist__player { height: 232px; }
+}
+
 /* --- area invito -------------------------------------------- */
 
 .invite {

@@ -294,15 +294,21 @@
 
 <div class="plait" aria-hidden="true"></div>
 
-<!-- ============================ STORIA ============================ -->
-<section class="section section--forest">
+<!-- ============================ STORIA ============================
+     L'ordine delle sezioni si governa dal portale: `data-section` è la
+     chiave con cui la riga della tabella `sezioni` ritrova questo blocco.
+     Senza dati, o senza JavaScript, vale l'ordine scritto qui.
+     ================================================================ -->
+<section class="section section--forest" data-section="storia">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <p class="eyebrow">La nostra storia</p>
       <h2>Due nomi, un nodo solo</h2>
     </div>
     <div class="storia">
-      <figure class="storia__figure">
+      <!-- La foto è la riserva: con delle foto in galleria, al suo posto
+           js/landing/gallery.js monta lo slider. -->
+      <figure class="storia__figure" data-region="galleria">
         <img class="storia__img"
              src="assets/img/storia.jpg"
              alt="David e Samantha insieme"
@@ -326,7 +332,7 @@
 <div class="plait" aria-hidden="true"></div>
 
 <!-- ============================ PROGRAMMA ============================ -->
-<section class="section section--navy" id="programma">
+<section class="section section--navy" id="programma" data-section="programma">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <p class="eyebrow">Il programma</p>
@@ -340,9 +346,25 @@
 
 <div class="plait" aria-hidden="true"></div>
 
+<!-- ============================ PLAYLIST ============================
+     Vuota finché nel portale non si incolla un link Spotify: senza
+     playlist la sezione resta nascosta.
+     ================================================================ -->
+<section class="section section--paper" id="playlist" data-section="playlist" hidden>
+  <div class="wrap wrap--wide">
+    <div class="section-head">
+      <p class="eyebrow">La colonna sonora</p>
+      <h2>La playlist del matrimonio</h2>
+    </div>
+    <div class="playlist" data-region="playlist"></div>
+  </div>
+</section>
+
+<div class="plait" aria-hidden="true"></div>
+
   
 <!-- ============================ INFO UTILI ============================ -->
-<section class="section section--forest" id="informazioni">
+<section class="section section--forest" id="informazioni" data-section="informazioni">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <svg class="section-head__ornament" viewBox="0 0 120 120" aria-hidden="true"><use href="#sym-clover"/></svg>
@@ -359,7 +381,7 @@
 
   
 <!-- ============================ TARTAN ============================ -->
-<section class="section section--navy">
+<section class="section section--navy" id="tartan" data-section="tartan">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <p class="eyebrow">Il Tartan: Intreccio di Storia e Radici</p>
@@ -414,7 +436,7 @@
      nasconde js/landing/tabs.js. Senza JS restano tutti aperti e il
      contenuto si legge lo stesso.
      ================================================================ -->
-<section class="section section--forest" id="radici">
+<section class="section section--forest" id="radici" data-section="radici">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <p class="eyebrow">Le radici</p>
@@ -798,7 +820,7 @@ I rituali del fuoco avevano un ruolo centrale nella tradizione: il falò di Belt
 <div class="plait" aria-hidden="true"></div>
 
 <!-- ============================ INVITO ============================ -->
-<section class="section section--paper" id="invito">
+<section class="section section--paper" id="invito" data-section="invito">
   <div class="wrap wrap--wide">
     <div class="section-head">
       <p class="eyebrow">Conferma di presenza</p>

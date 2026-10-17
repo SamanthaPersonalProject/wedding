@@ -5,6 +5,7 @@
 
 import { el, render, modal, confirmDialog, toast, formValues } from '../lib/dom.js';
 import { formatTime } from '../lib/format.js';
+import { createDragSort, moveToward, moveBy, moveButtons } from './sortable.js';
 
 export function createTimelinePanel(root, repo) {
   let items = [];
@@ -89,50 +90,24 @@ export function createTimelinePanel(root, repo) {
     }
   }
 
-  /* ---------------- trascinamento ---------------- */
+  /* ---------------- ordine ---------------- */
 
-  let draggedId = null;
+  async function persistOrder(next) {
+    items = next;
+    draw();
+    try {
+      await repo.reorderTimeline(items.map((entry) => entry.id));
+    } catch (err) {
+      toast(err.message, 'danger');
+      await reload();
+    }
+  }
 
-  function rowNode(item) {
-    const node = el('div', {
-      class: 'sortable__item',
-      draggable: true,
-      dataset: { id: item.id },
+  const dragAttrs = createDragSort((draggedId, targetId) =>
+    persistOrder(moveToward(items, draggedId, targetId)));
 
-      onDragstart: (event) => {
-        draggedId = item.id;
-        node.classList.add('is-dragging');
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', item.id);
-      },
-      onDragend: () => {
-        draggedId = null;
-        node.classList.remove('is-dragging');
-      },
-      onDragover: (event) => {
-        event.preventDefault();
-        if (draggedId && draggedId !== item.id) node.classList.add('is-over');
-      },
-      onDragleave: () => node.classList.remove('is-over'),
-      onDrop: async (event) => {
-        event.preventDefault();
-        node.classList.remove('is-over');
-        if (!draggedId || draggedId === item.id) return;
-
-        const from = items.findIndex((entry) => entry.id === draggedId);
-        const to = items.findIndex((entry) => entry.id === item.id);
-        const [moved] = items.splice(from, 1);
-        items.splice(to, 0, moved);
-        draw();
-
-        try {
-          await repo.reorderTimeline(items.map((entry) => entry.id));
-        } catch (err) {
-          toast(err.message, 'danger');
-          await reload();
-        }
-      },
-    }, [
+  function rowNode(item, index) {
+    return el('div', { class: 'sortable__item', ...dragAttrs(item.id) }, [
       el('span', { class: 'sortable__grip', 'aria-hidden': 'true' }, '⠿'),
       el('span', { class: 'sortable__time' }, formatTime(item.time)),
       el('div', {}, [
@@ -142,10 +117,16 @@ export function createTimelinePanel(root, repo) {
         ]),
         item.description ? el('div', { class: 'sortable__desc' }, item.description) : null,
       ]),
-      el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => edit(item) }, 'Modifica'),
+      el('div', { class: 'table__actions' }, [
+        moveButtons({
+          index,
+          total: items.length,
+          label: item.title,
+          onMove: (delta) => persistOrder(moveBy(items, item.id, delta)),
+        }),
+        el('button', { class: 'btn btn--quiet btn--sm', type: 'button', onClick: () => edit(item) }, 'Modifica'),
+      ]),
     ]);
-
-    return node;
   }
 
   function draw() {
@@ -153,7 +134,7 @@ export function createTimelinePanel(root, repo) {
       el('div', { class: 'panel-head' }, [
         el('div', {}, [
           el('h2', {}, 'Programma'),
-          el('p', {}, 'Trascina le righe per cambiare l’ordine. Le voci nascoste restano qui ma non compaiono sul sito.'),
+          el('p', {}, 'Trascina le righe o usa le frecce per cambiare l’ordine. Le voci nascoste restano qui ma non compaiono sul sito.'),
         ]),
         el('div', { class: 'panel-actions' }, [
           el('button', { class: 'btn btn--gold btn--sm', type: 'button', onClick: () => edit(null) }, 'Nuova voce'),

@@ -123,6 +123,55 @@ select * from (values
 ) as seme(testo, posizione)
 where not exists (select 1 from public.dress_code);
 
+-- L'ordine delle sezioni della pagina pubblica.
+-- `chiave` corrisponde all'attributo data-section nel markup di index.html:
+-- le righe qui dentro non creano sezioni, riordinano quelle che esistono.
+-- Una chiave che non trova riscontro nel markup viene semplicemente ignorata.
+create table if not exists public.sezioni (
+  chiave     text primary key,
+  etichetta  text not null,
+  posizione  integer not null default 999,
+  pubblicato boolean not null default true
+);
+
+create index if not exists sezioni_posizione_idx on public.sezioni (posizione);
+
+-- Seme: l'ordine con cui le sezioni stanno già in pagina.
+insert into public.sezioni (chiave, etichetta, posizione)
+select * from (values
+  ('storia',       'La nostra storia',  1),
+  ('programma',    'Il programma',      2),
+  ('playlist',     'La playlist',       3),
+  ('informazioni', 'Info pratiche',     4),
+  ('tartan',       'Tartan e dress code', 5),
+  ('radici',       'Le radici celtiche', 6),
+  ('invito',       'Conferma di presenza', 7)
+) as seme(chiave, etichetta, posizione)
+where not exists (select 1 from public.sezioni);
+
+-- Le foto dello slider: qui ci sta solo il riferimento, non il file.
+-- L'immagine resta dove già si trova (cartella assets/, Google Foto, un
+-- qualunque URL pubblico): il database ne conserva l'indirizzo.
+create table if not exists public.galleria (
+  id         uuid primary key default gen_random_uuid(),
+  url        text not null,
+  didascalia text,
+  posizione  integer not null default 999,
+  pubblicato boolean not null default true
+);
+
+create index if not exists galleria_posizione_idx on public.galleria (posizione);
+
+-- Impostazioni libere chiave/valore: per ora il link della playlist.
+create table if not exists public.impostazioni (
+  chiave text primary key,
+  valore text
+);
+
+insert into public.impostazioni (chiave, valore)
+values ('playlist_spotify', null)
+on conflict (chiave) do nothing;
+
 -- Traccia dei tentativi di codice: serve a bloccare chi prova a indovinare.
 create table if not exists public.tentativi_codice (
   id        bigserial primary key,
@@ -142,6 +191,9 @@ alter table public.ospiti            enable row level security;
 alter table public.programma         enable row level security;
 alter table public.info_utili        enable row level security;
 alter table public.dress_code        enable row level security;
+alter table public.sezioni           enable row level security;
+alter table public.galleria          enable row level security;
+alter table public.impostazioni      enable row level security;
 alter table public.tentativi_codice  enable row level security;
 
 -- Gli sposi: accesso pieno. Gli anonimi: nessuna policy, quindi nulla.
@@ -163,6 +215,18 @@ create policy "sposi gestiscono info" on public.info_utili
 
 drop policy if exists "sposi gestiscono dress code" on public.dress_code;
 create policy "sposi gestiscono dress code" on public.dress_code
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "sposi gestiscono sezioni" on public.sezioni;
+create policy "sposi gestiscono sezioni" on public.sezioni
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "sposi gestiscono galleria" on public.galleria;
+create policy "sposi gestiscono galleria" on public.galleria
+  for all to authenticated using (true) with check (true);
+
+drop policy if exists "sposi gestiscono impostazioni" on public.impostazioni;
+create policy "sposi gestiscono impostazioni" on public.impostazioni
   for all to authenticated using (true) with check (true);
 
 drop policy if exists "sposi leggono tentativi" on public.tentativi_codice;
@@ -275,7 +339,19 @@ as $$
     'dress_code', coalesce((
       select jsonb_agg(to_jsonb(d) order by d.posizione)
       from public.dress_code d where d.pubblicato
-    ), '[]'::jsonb)
+    ), '[]'::jsonb),
+    'sezioni', coalesce((
+      select jsonb_agg(to_jsonb(s) order by s.posizione)
+      from public.sezioni s
+    ), '[]'::jsonb),
+    'galleria', coalesce((
+      select jsonb_agg(to_jsonb(g) order by g.posizione)
+      from public.galleria g where g.pubblicato
+    ), '[]'::jsonb),
+    'impostazioni', coalesce((
+      select jsonb_object_agg(i.chiave, i.valore)
+      from public.impostazioni i where i.valore is not null
+    ), '{}'::jsonb)
   );
 $$;
 
@@ -362,6 +438,50 @@ begin
 end;
 $$;
 
+-- Riordino delle info utili. L'ordine delle categorie non ha una tabella
+-- sua: una categoria sta dove sta la sua prima scheda, quindi spostare un
+-- blocco di schede sposta la categoria. Una sola lista, un solo riordino.
+create or replace function public.riordina_info_utili(p_ids uuid[])
+returns void
+language plpgsql
+security invoker                            -- passa da RLS: solo gli sposi
+as $$
+begin
+  update public.info_utili i
+     set posizione = sub.ord
+    from (select unnest(p_ids) as id, generate_subscripts(p_ids, 1) as ord) sub
+   where i.id = sub.id;
+end;
+$$;
+
+-- Riordino della galleria, stesso meccanismo.
+create or replace function public.riordina_galleria(p_ids uuid[])
+returns void
+language plpgsql
+security invoker
+as $$
+begin
+  update public.galleria g
+     set posizione = sub.ord
+    from (select unnest(p_ids) as id, generate_subscripts(p_ids, 1) as ord) sub
+   where g.id = sub.id;
+end;
+$$;
+
+-- Riordino delle sezioni: qui la chiave è testo, non uuid.
+create or replace function public.riordina_sezioni(p_chiavi text[])
+returns void
+language plpgsql
+security invoker
+as $$
+begin
+  update public.sezioni s
+     set posizione = sub.ord
+    from (select unnest(p_chiavi) as chiave, generate_subscripts(p_chiavi, 1) as ord) sub
+   where s.chiave = sub.chiave;
+end;
+$$;
+
 -- ---------------------------------------------------------------
 --  Permessi di esecuzione
 -- ---------------------------------------------------------------
@@ -371,9 +491,15 @@ revoke all on function public.conferma_invito(text, jsonb)   from public;
 revoke all on function public.contenuti_pubblici()           from public;
 revoke all on function public.riordina_programma(uuid[])     from public;
 revoke all on function public.riordina_dress_code(uuid[])    from public;
+revoke all on function public.riordina_info_utili(uuid[])    from public;
+revoke all on function public.riordina_galleria(uuid[])      from public;
+revoke all on function public.riordina_sezioni(text[])       from public;
 
 grant execute on function public.verifica_invito(text)        to anon, authenticated;
 grant execute on function public.conferma_invito(text, jsonb) to anon, authenticated;
 grant execute on function public.contenuti_pubblici()         to anon, authenticated;
 grant execute on function public.riordina_programma(uuid[])   to authenticated;
 grant execute on function public.riordina_dress_code(uuid[])  to authenticated;
+grant execute on function public.riordina_info_utili(uuid[])  to authenticated;
+grant execute on function public.riordina_galleria(uuid[])    to authenticated;
+grant execute on function public.riordina_sezioni(text[])     to authenticated;

@@ -6,6 +6,9 @@ import { createGuestsPanel } from './guests.js';
 import { createTimelinePanel } from './timeline.js';
 import { createInfoPanel } from './info.js';
 import { createDressCodePanel } from './dresscode.js';
+import { createSectionsPanel } from './sections.js';
+import { createGalleryPanel } from './gallery.js';
+import { createPlaylistPanel } from './playlist.js';
 
 const loginScreen = $('#schermata-accesso');
 const appScreen = $('#schermata-portale');
@@ -70,6 +73,9 @@ async function enterApp(user) {
     programma: createTimelinePanel($('#pannello-programma'), repo),
     info: createInfoPanel($('#pannello-info'), repo),
     dresscode: createDressCodePanel($('#pannello-dresscode'), repo),
+    galleria: createGalleryPanel($('#pannello-galleria'), repo),
+    playlist: createPlaylistPanel($('#pannello-playlist'), repo),
+    sezioni: createSectionsPanel($('#pannello-sezioni'), repo),
   };
 
   setupTabs();

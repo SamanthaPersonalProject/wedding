@@ -123,12 +123,127 @@ export function createGuestsPanel(root, repo) {
     toast('Link invito copiato.', 'ok');
   }
 
+  /**
+   * Elenco degli ospiti di un gruppo, con aggiunta e rimozione.
+   *
+   * Su un gruppo che esiste già le modifiche vanno a segno subito. Su un
+   * gruppo nuovo non c'è ancora un id a cui legarli: i nomi restano qui in
+   * attesa e vengono creati dopo il salvataggio del gruppo.
+   *
+   * @param {Object|null} invite
+   * @param {() => number} seatsNow - i posti scritti nel form in questo momento
+   */
+  function guestEditor(invite, seatsNow) {
+    const pending = !invite?.id;
+    const guests = invite?.guests ? [...invite.guests] : [];
+
+    const list = el('div', { class: 'stack stack--tight' });
+    const hint = el('p', { class: 'field__hint' });
+
+    const drawHint = () => {
+      const seats = seatsNow();
+      hint.classList.toggle('field__hint--warn', guests.length > seats);
+      hint.textContent = guests.length > seats
+        ? `${plural(guests.length, 'nome', 'nomi')} su ${plural(seats, 'posto tenuto', 'posti tenuti')}: alza i posti o togli qualcuno.`
+        : `${plural(guests.length, 'nome', 'nomi')} su ${plural(seats, 'posto tenuto', 'posti tenuti')}.`;
+    };
+
+    const remove = async (guest, index) => {
+      if (!pending) {
+        const sure = await confirmDialog('Togliere l’ospite?', `${guest.name} verrà rimosso da questo invito.`, 'Togli');
+        if (!sure) return;
+        await repo.deleteGuest(guest.id);
+        if (invite) invite.guests = invite.guests.filter((entry) => entry.id !== guest.id);
+      }
+      guests.splice(index, 1);
+      drawList();
+      if (!pending) await reload();
+    };
+
+    function drawList() {
+      render(list, guests.length
+        ? guests.map((guest, index) => el('div', { class: 'guest-line' }, [
+            el('div', {}, [
+              el('div', {}, guest.name),
+              el('div', { class: 'guest-line__meta' }, [
+                guest.status ? STATUS_META[guest.status].label : 'Da invitare',
+                guest.isChild ? ' · bambino' : '',
+                guest.diet ? ` · ${guest.diet}` : '',
+              ].join('')),
+            ]),
+            el('button', {
+              class: 'btn btn--danger btn--sm', type: 'button',
+              onClick: () => remove(guest, index),
+            }, 'Togli'),
+          ]))
+        : [el('p', { class: 'field__hint' }, 'Nessun ospite in questo gruppo.')]);
+      drawHint();
+    }
+
+    const nameInput = el('input', {
+      class: 'input', placeholder: 'Nome e cognome', 'aria-label': 'Nome del nuovo ospite',
+      onKeydown: (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();   // dentro a un form, Invio lo invierebbe
+        addCurrent();
+      },
+    });
+
+    const childInput = el('input', { type: 'checkbox', id: 'nuovo-bambino' });
+
+    async function addCurrent() {
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      try {
+        if (pending) {
+          guests.push({ name, isChild: childInput.checked, status: 'in_attesa', diet: '' });
+        } else {
+          const guest = await repo.saveGuest({
+            inviteId: invite.id, name, isChild: childInput.checked, status: 'in_attesa',
+          });
+          guests.push(guest);
+          invite.guests.push(guest);
+        }
+        nameInput.value = '';
+        childInput.checked = false;
+        nameInput.focus();        // così si infilano più nomi di fila
+        drawList();
+        if (!pending) await reload();
+      } catch (err) {
+        toast(err.message, 'danger');
+      }
+    }
+
+    drawList();
+
+    const node = el('div', { class: 'stack stack--tight' }, [
+      list,
+      el('div', { style: 'display:flex; gap:var(--sp-2)' }, [
+        nameInput,
+        el('button', { class: 'btn btn--gold btn--sm', type: 'button', onClick: addCurrent }, 'Aggiungi'),
+      ]),
+      el('label', { class: 'check', for: 'nuovo-bambino' }, [childInput, el('span', {}, 'È un bambino')]),
+      hint,
+    ]);
+
+    return { node, guests, pending, refreshHint: drawHint };
+  }
+
   async function editInvite(invite) {
     const isNew = !invite;
     const codeInput = el('input', {
       class: 'input', id: 'inv-codice', name: 'code', required: true,
       value: invite?.code || generateInviteCode(),
     });
+
+    const seatsInput = el('input', {
+      class: 'input', id: 'inv-posti', name: 'maxSeats', type: 'number',
+      min: 1, max: 12, value: invite?.maxSeats || 2,
+      onInput: () => editor.refreshHint(),
+    });
+
+    const editor = guestEditor(invite, () => Number(seatsInput.value) || 0);
 
     const body = el('div', { class: 'stack stack--tight' }, [
       el('div', { class: 'field' }, [
@@ -149,7 +264,7 @@ export function createGuestsPanel(root, repo) {
       el('div', { class: 'field-row' }, [
         el('div', { class: 'field' }, [
           el('label', { class: 'field__label', for: 'inv-posti' }, 'Posti tenuti'),
-          el('input', { class: 'input', id: 'inv-posti', name: 'maxSeats', type: 'number', min: 1, max: 12, value: invite?.maxSeats || 2 }),
+          seatsInput,
         ]),
         el('div', { class: 'field' }, [
           el('label', { class: 'field__label', for: 'inv-tel' }, 'Telefono (WhatsApp)'),
@@ -160,6 +275,14 @@ export function createGuestsPanel(root, repo) {
         el('label', { class: 'field__label', for: 'inv-nota' }, 'Nota privata'),
         el('input', { class: 'input', id: 'inv-nota', name: 'adminNote', value: invite?.adminNote || '' }),
         el('p', { class: 'field__hint' }, 'Solo per voi: gli ospiti non la vedono mai.'),
+      ]),
+
+      el('div', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Ospiti'),
+        el('p', { class: 'field__hint' }, isNew
+          ? 'Scrivi i nomi adesso: vengono creati insieme al gruppo. Invio aggiunge e lascia il cursore pronto per il prossimo.'
+          : 'Ogni nome qui dentro compare nella pagina dell’invito. Le modifiche sono già salvate.'),
+        editor.node,
       ]),
     ]);
 
@@ -198,8 +321,32 @@ export function createGuestsPanel(root, repo) {
     }
 
     try {
-      await repo.saveInvite({ ...values, id: invite?.id });
-      toast(isNew ? 'Gruppo creato.' : 'Modifiche salvate.', 'ok');
+      const saved = await repo.saveInvite({ ...values, id: invite?.id });
+
+      // I nomi raccolti mentre il gruppo non esisteva ancora: ora c'è un id
+      // a cui legarli. Se uno fallisce lo si dice, ma il gruppo è già
+      // creato e gli altri restano.
+      const failed = [];
+      if (editor.pending) {
+        for (const guest of editor.guests) {
+          try {
+            await repo.saveGuest({
+              inviteId: saved.id, name: guest.name, isChild: guest.isChild, status: 'in_attesa',
+            });
+          } catch {
+            failed.push(guest.name);
+          }
+        }
+      }
+
+      if (failed.length) {
+        toast(`Gruppo creato, ma non siamo riusciti ad aggiungere: ${failed.join(', ')}.`, 'danger');
+      } else {
+        const added = editor.pending ? editor.guests.length : 0;
+        toast(isNew
+          ? `Gruppo creato${added ? ` con ${plural(added, 'ospite', 'ospiti')}` : ''}.`
+          : 'Modifiche salvate.', 'ok');
+      }
       await reload();
     } catch (err) {
       toast(err.message, 'danger');
@@ -207,67 +354,13 @@ export function createGuestsPanel(root, repo) {
   }
 
   async function editGuests(invite) {
-    const list = el('div', { class: 'stack stack--tight' });
-
-    const drawList = (guests) => {
-      render(list, guests.length
-        ? guests.map((guest) => el('div', {
-            style: 'display:flex; align-items:center; gap:var(--sp-3); justify-content:space-between; padding-block:var(--sp-2); border-bottom:var(--b-light)',
-          }, [
-            el('div', {}, [
-              el('div', {}, guest.name),
-              el('div', { style: 'font-size:var(--fs-xs); color:var(--t-on-light-mute)' }, [
-                STATUS_META[guest.status].label,
-                guest.isChild ? ' · bambino' : '',
-                guest.diet ? ` · ${guest.diet}` : '',
-              ].join('')),
-            ]),
-            el('button', {
-              class: 'btn btn--danger btn--sm', type: 'button',
-              onClick: async () => {
-                const sure = await confirmDialog('Togliere l’ospite?', `${guest.name} verrà rimosso da questo invito.`, 'Togli');
-                if (!sure) return;
-                await repo.deleteGuest(guest.id);
-                invite.guests = invite.guests.filter((item) => item.id !== guest.id);
-                drawList(invite.guests);
-                await reload();
-              },
-            }, 'Togli'),
-          ]))
-        : [el('p', { class: 'field__hint' }, 'Nessun ospite in questo gruppo.')]);
-    };
-
-    drawList(invite.guests);
-
-    const nameInput = el('input', { class: 'input', placeholder: 'Nome e cognome', 'aria-label': 'Nome del nuovo ospite' });
-    const childInput = el('input', { type: 'checkbox', id: 'nuovo-bambino' });
-
-    const addRow = el('div', { class: 'stack stack--tight' }, [
-      el('div', { style: 'display:flex; gap:var(--sp-2)' }, [
-        nameInput,
-        el('button', {
-          class: 'btn btn--gold btn--sm', type: 'button',
-          onClick: async () => {
-            const name = nameInput.value.trim();
-            if (!name) return;
-            const guest = await repo.saveGuest({ inviteId: invite.id, name, isChild: childInput.checked, status: 'in_attesa' });
-            invite.guests.push(guest);
-            nameInput.value = '';
-            childInput.checked = false;
-            drawList(invite.guests);
-            await reload();
-          },
-        }, 'Aggiungi'),
-      ]),
-      el('label', { class: 'check', for: 'nuovo-bambino' }, [childInput, el('span', {}, 'È un bambino')]),
-    ]);
+    const editor = guestEditor(invite, () => invite.maxSeats);
 
     await modal({
       title: `Ospiti di ${invite.groupName}`,
       body: el('div', { class: 'stack' }, [
-        el('p', { class: 'field__hint' }, `Posti tenuti: ${plural(invite.maxSeats, 'persona', 'persone')}. Ogni nome qui dentro comparirà nella pagina dell’invito.`),
-        list,
-        addRow,
+        el('p', { class: 'field__hint' }, 'Ogni nome qui dentro comparirà nella pagina dell’invito.'),
+        editor.node,
       ]),
     });
   }

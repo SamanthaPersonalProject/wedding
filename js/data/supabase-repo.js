@@ -68,6 +68,21 @@ const toDressCodeItem = (row) => ({
   published: row.pubblicato,
 });
 
+const toSectionItem = (row) => ({
+  key: row.chiave,
+  label: row.etichetta,
+  position: row.posizione,
+  published: row.pubblicato,
+});
+
+const toPhotoItem = (row) => ({
+  id: row.id,
+  url: row.url,
+  caption: row.didascalia ?? '',
+  position: row.posizione,
+  published: row.pubblicato,
+});
+
 /* ---------------- mappatura applicazione → DB ---------------- */
 
 const fromInvite = (invite) => ({
@@ -109,10 +124,22 @@ const fromDressCodeItem = (item) => ({
   pubblicato: item.published !== false,
 });
 
+const fromPhotoItem = (item) => ({
+  url: item.url,
+  didascalia: item.caption || null,
+  posizione: item.position ?? 999,
+  pubblicato: item.published !== false,
+});
+
 /** Traduce gli errori Postgres in frasi leggibili. */
 function explain(error, fallback) {
   if (!error) return null;
   if (error.code === '23505') return new DataError('Questo codice invito esiste già: generane un altro.');
+  // Tabella o funzione che il database non conosce: manca l'ultima versione
+  // dello schema. Succede quando si aggiorna il sito ma non il database.
+  if (['42P01', '42883', 'PGRST202', 'PGRST205'].includes(error.code)) {
+    return new DataError('Il database non ha ancora questa parte: esegui supabase/schema.sql aggiornato nel SQL Editor.', error);
+  }
   if (error.code === '42501' || error.message?.includes('row-level security')) {
     return new DataError('Permesso negato: rientra nel portale e riprova.');
   }
@@ -158,6 +185,11 @@ export async function createSupabaseRepository() {
         // null (non []) quando la funzione SQL è quella vecchia, senza
         // dress code: la pagina tiene il testo statico invece di svuotarlo.
         dressCode: data?.dress_code ? data.dress_code.map(toDressCodeItem) : null,
+        // Stessa logica: senza queste chiavi la pagina resta com'è nel
+        // markup, con le sezioni nell'ordine scritto a mano.
+        sections: data?.sezioni ? data.sezioni.map(toSectionItem) : null,
+        gallery: data?.galleria ? data.galleria.map(toPhotoItem) : null,
+        settings: data?.impostazioni ?? {},
       };
     },
 
@@ -301,6 +333,11 @@ export async function createSupabaseRepository() {
       guard(error, 'Non riusciamo a eliminare la scheda.');
     },
 
+    async reorderInfo(orderedIds) {
+      const { error } = await db.rpc('riordina_info_utili', { p_ids: orderedIds });
+      guard(error, 'Non riusciamo a salvare il nuovo ordine.');
+    },
+
     /* ---------------- dress code ---------------- */
 
     async listDressCode() {
@@ -331,6 +368,78 @@ export async function createSupabaseRepository() {
     async reorderDressCode(orderedIds) {
       const { error } = await db.rpc('riordina_dress_code', { p_ids: orderedIds });
       guard(error, 'Non riusciamo a salvare il nuovo ordine.');
+    },
+
+    /* ---------------- sezioni della pagina ---------------- */
+
+    async listSections() {
+      const { data, error } = await db.from('sezioni').select('*').order('posizione');
+      guard(error, 'Non riusciamo a caricare le sezioni.');
+      return (data ?? []).map(toSectionItem);
+    },
+
+    /** Si tocca solo la visibilità: le sezioni esistono nel markup, non qui. */
+    async saveSection(section) {
+      const { data, error } = await db
+        .from('sezioni')
+        .update({ pubblicato: section.published !== false })
+        .eq('chiave', section.key)
+        .select()
+        .single();
+      guard(error, 'Non riusciamo a salvare la sezione.');
+      return toSectionItem(data);
+    },
+
+    async reorderSections(orderedKeys) {
+      const { error } = await db.rpc('riordina_sezioni', { p_chiavi: orderedKeys });
+      guard(error, 'Non riusciamo a salvare il nuovo ordine.');
+    },
+
+    /* ---------------- galleria ---------------- */
+
+    async listGallery() {
+      const { data, error } = await db.from('galleria').select('*').order('posizione');
+      guard(error, 'Non riusciamo a caricare le foto.');
+      return (data ?? []).map(toPhotoItem);
+    },
+
+    async saveGalleryItem(item) {
+      const payload = fromPhotoItem(item);
+
+      if (item.id) {
+        const { data, error } = await db.from('galleria').update(payload).eq('id', item.id).select().single();
+        guard(error, 'Non riusciamo a salvare la foto.');
+        return toPhotoItem(data);
+      }
+
+      const { data, error } = await db.from('galleria').insert(payload).select().single();
+      guard(error, 'Non riusciamo ad aggiungere la foto.');
+      return toPhotoItem(data);
+    },
+
+    async deleteGalleryItem(id) {
+      const { error } = await db.from('galleria').delete().eq('id', id);
+      guard(error, 'Non riusciamo a togliere la foto.');
+    },
+
+    async reorderGallery(orderedIds) {
+      const { error } = await db.rpc('riordina_galleria', { p_ids: orderedIds });
+      guard(error, 'Non riusciamo a salvare il nuovo ordine.');
+    },
+
+    /* ---------------- impostazioni ---------------- */
+
+    async getSettings() {
+      const { data, error } = await db.from('impostazioni').select('*');
+      guard(error, 'Non riusciamo a caricare le impostazioni.');
+      return Object.fromEntries((data ?? []).map((row) => [row.chiave, row.valore ?? '']));
+    },
+
+    async saveSetting(key, value) {
+      const { error } = await db
+        .from('impostazioni')
+        .upsert({ chiave: key, valore: value || null }, { onConflict: 'chiave' });
+      guard(error, 'Non riusciamo a salvare l’impostazione.');
     },
   };
 }

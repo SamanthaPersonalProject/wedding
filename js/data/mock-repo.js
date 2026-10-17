@@ -82,6 +82,24 @@ function seed() {
       { id: uid(), text: 'Tacchi bassi o larghi, scarpe da ginnastica, ciabatte o infradito: la cerimonia è sul prato in riva all’acqua.', position: 2, published: true },
       { id: uid(), text: 'Scarpe comode per il céilí. Parliamo sul serio.', position: 3, published: true },
     ],
+
+    // Le chiavi combaciano con data-section nel markup di index.html.
+    sections: [
+      { key: 'storia',       label: 'La nostra storia',    position: 1, published: true },
+      { key: 'programma',    label: 'Il programma',        position: 2, published: true },
+      { key: 'playlist',     label: 'La playlist',         position: 3, published: true },
+      { key: 'informazioni', label: 'Info pratiche',       position: 4, published: true },
+      { key: 'tartan',       label: 'Tartan e dress code', position: 5, published: true },
+      { key: 'radici',       label: 'Le radici celtiche',  position: 6, published: true },
+      { key: 'invito',       label: 'Conferma di presenza', position: 7, published: true },
+    ],
+
+    gallery: [
+      { id: uid(), url: 'assets/img/storia.jpg', caption: 'Noi due', position: 1, published: true },
+      { id: uid(), url: 'assets/img/tartan.jpg', caption: 'Il nostro tartan', position: 2, published: true },
+    ],
+
+    settings: { playlist_spotify: '' },
   };
 }
 
@@ -90,11 +108,18 @@ function load() {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const stored = JSON.parse(raw);
-      // Dati salvati prima che esistesse il dress code: si integra il seme.
-      if (!stored.dressCode) {
-        stored.dressCode = seed().dressCode;
-        save(stored);
+      // Dati salvati da una versione precedente: le chiavi che non c'erano
+      // ancora (dress code, sezioni, galleria, impostazioni) arrivano dal
+      // seme, il resto resta com'è.
+      const fresh = seed();
+      let patched = false;
+      for (const key of Object.keys(fresh)) {
+        if (!stored[key]) {
+          stored[key] = fresh[key];
+          patched = true;
+        }
       }
+      if (patched) save(stored);
       return stored;
     }
   } catch {
@@ -157,6 +182,9 @@ export function createMockRepository() {
         timeline: clone(published(state.timeline)),
         info: clone(published(state.info)),
         dressCode: clone(published(state.dressCode)),
+        sections: clone(state.sections).sort(byPosition),
+        gallery: clone(published(state.gallery)),
+        settings: clone(state.settings),
       };
     },
 
@@ -332,6 +360,15 @@ export function createMockRepository() {
       persist();
     },
 
+    async reorderInfo(orderedIds) {
+      requireAuth();
+      orderedIds.forEach((id, index) => {
+        const item = state.info.find((entry) => entry.id === id);
+        if (item) item.position = index + 1;
+      });
+      persist();
+    },
+
     /* ---------------- dress code ---------------- */
 
     async listDressCode() {
@@ -366,6 +403,81 @@ export function createMockRepository() {
         const item = state.dressCode.find((entry) => entry.id === id);
         if (item) item.position = index + 1;
       });
+      persist();
+    },
+
+    /* ---------------- sezioni della pagina ---------------- */
+
+    async listSections() {
+      requireAuth();
+      return clone(state.sections).sort(byPosition);
+    },
+
+    async saveSection(data) {
+      requireAuth();
+      const section = state.sections.find((entry) => entry.key === data.key);
+      if (!section) throw new DataError('Sezione non trovata.');
+      section.published = data.published !== false;
+      persist();
+      return clone(section);
+    },
+
+    async reorderSections(orderedKeys) {
+      requireAuth();
+      orderedKeys.forEach((key, index) => {
+        const section = state.sections.find((entry) => entry.key === key);
+        if (section) section.position = index + 1;
+      });
+      persist();
+    },
+
+    /* ---------------- galleria ---------------- */
+
+    async listGallery() {
+      requireAuth();
+      return clone(state.gallery).sort(byPosition);
+    },
+
+    async saveGalleryItem(data) {
+      requireAuth();
+      if (data.id) {
+        const item = state.gallery.find((entry) => entry.id === data.id);
+        if (!item) throw new DataError('Foto non trovata.');
+        Object.assign(item, data);
+        persist();
+        return clone(item);
+      }
+      const item = { ...data, id: uid(), position: state.gallery.length + 1 };
+      state.gallery.push(item);
+      persist();
+      return clone(item);
+    },
+
+    async deleteGalleryItem(id) {
+      requireAuth();
+      state.gallery = state.gallery.filter((item) => item.id !== id);
+      persist();
+    },
+
+    async reorderGallery(orderedIds) {
+      requireAuth();
+      orderedIds.forEach((id, index) => {
+        const item = state.gallery.find((entry) => entry.id === id);
+        if (item) item.position = index + 1;
+      });
+      persist();
+    },
+
+    /* ---------------- impostazioni ---------------- */
+
+    async getSettings() {
+      requireAuth();
+      return clone(state.settings);
+    },
+
+    async saveSetting(key, value) {
+      requireAuth();
+      state.settings[key] = value || '';
       persist();
     },
 

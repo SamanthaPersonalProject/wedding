@@ -47,14 +47,30 @@
  * @property {number} position
  * @property {boolean} published
  *
+ * @typedef {Object} SectionItem
+ * @property {string} key            - combacia con data-section in index.html
+ * @property {string} label          - come si chiama nel portale
+ * @property {number} position
+ * @property {boolean} published
+ *
+ * @typedef {Object} PhotoItem
+ * @property {string} id
+ * @property {string} url            - indirizzo dell'immagine, non il file
+ * @property {string} caption
+ * @property {number} position
+ * @property {boolean} published
+ *
  * Metodi attesi da ogni implementazione:
  *
  *   // pubblico (ospiti)
  *   verifyInvite(code)                  -> {invite, timeline, info} | null
  *   submitRsvp(code, payload)           -> Invite
- *   getPublicContent()                  -> {timeline, info, dressCode}
- *                                          (dressCode è null se il database
- *                                          non ha ancora la tabella)
+ *   getPublicContent()                  -> {timeline, info, dressCode,
+ *                                           sections, gallery, settings}
+ *                                          (dressCode, sections e gallery
+ *                                          sono null se il database non ha
+ *                                          ancora la tabella: la pagina
+ *                                          tiene quello che ha in markup)
  *
  *   // riservato (sposi)
  *   signIn(email, password)             -> {email}
@@ -72,10 +88,20 @@
  *   listInfo()                          -> InfoItem[]
  *   saveInfoItem(item)                  -> InfoItem
  *   deleteInfoItem(id)                  -> void
+ *   reorderInfo(orderedIds)             -> void
  *   listDressCode()                     -> DressCodeItem[]
  *   saveDressCodeItem(item)             -> DressCodeItem
  *   deleteDressCodeItem(id)             -> void
  *   reorderDressCode(orderedIds)        -> void
+ *   listSections()                      -> SectionItem[]
+ *   saveSection(section)                -> SectionItem  (solo visibilità)
+ *   reorderSections(orderedKeys)        -> void
+ *   listGallery()                       -> PhotoItem[]
+ *   saveGalleryItem(item)               -> PhotoItem
+ *   deleteGalleryItem(id)               -> void
+ *   reorderGallery(orderedIds)          -> void
+ *   getSettings()                       -> {[chiave]: string}
+ *   saveSetting(key, value)             -> void
  */
 
 import { usesSupabase } from '../config.js';
