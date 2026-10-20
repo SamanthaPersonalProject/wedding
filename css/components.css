@@ -157,6 +157,10 @@
 .badge--wait    { color: var(--c-warn);   background: var(--c-warn-soft); }
 .badge--absent  { color: var(--c-danger); background: var(--c-danger-soft); }
 
+/* Neutra: classifica, non segnala uno stato. Niente pallino davanti. */
+.badge--soft    { color: var(--t-on-light-mute); background: var(--c-ivory-deep); }
+.badge--soft::before { display: none; }
+
 /* --- avvisi ------------------------------------------------- */
 
 .notice {

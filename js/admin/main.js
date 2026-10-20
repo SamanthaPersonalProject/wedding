@@ -105,7 +105,8 @@ async function boot() {
   }
 
   loginForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+    event.preventDefault();   // senza questo il browser farebbe GET,
+                              // con la password nell'indirizzo
     loginError.hidden = true;
 
     const email = loginForm.email.value.trim();
@@ -128,6 +129,16 @@ async function boot() {
       loginButton.textContent = 'Entra';
     }
   });
+
+  // Solo adesso il pulsante diventa premibile: fino a qui una pressione
+  // avrebbe fatto partire la submit del browser, e con lei la password
+  // nell'indirizzo.
+  loginButton.disabled = false;
+  loginButton.textContent = 'Entra';
 }
 
-boot();
+boot().catch((err) => {
+  // Se l'avvio non riesce il pulsante resta disabilitato: meglio un
+  // accesso impossibile che un accesso che perde le credenziali.
+  showLoginError(`Il portale non è riuscito ad avviarsi: ${err.message}. Ricarica la pagina; se insiste, è un errore del sito.`);
+});

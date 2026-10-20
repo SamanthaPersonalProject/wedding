@@ -11,6 +11,36 @@
 import { el, render, modal, confirmDialog, toast, formValues } from '../lib/dom.js';
 import { createDragSort, moveToward, moveBy, moveButtons } from './sortable.js';
 
+/**
+ * Che tipo di indirizzo è stato scritto.
+ *
+ * Vanno bene entrambe le forme, e si possono mischiare: una foto dentro
+ * al sito e la successiva su un servizio esterno.
+ *
+ * @returns {{tipo: 'locale'|'esterno'|'vuoto'|'errato', nota: string}}
+ */
+function classificaUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return { tipo: 'vuoto', nota: '' };
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const { hostname } = new URL(value);
+      return { tipo: 'esterno', nota: hostname };
+    } catch {
+      return { tipo: 'errato', nota: 'Indirizzo non valido.' };
+    }
+  }
+
+  // Un indirizzo che comincia con "//" o con uno schema diverso da http
+  // non è né un file del sito né un link utilizzabile.
+  if (value.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(value)) {
+    return { tipo: 'errato', nota: 'Usa un percorso dentro al sito oppure un indirizzo che inizia per https://' };
+  }
+
+  return { tipo: 'locale', nota: value.replace(/^\.?\//, '') };
+}
+
 export function createGalleryPanel(root, repo) {
   let items = [];
 
@@ -36,22 +66,41 @@ export function createGalleryPanel(root, repo) {
     const previewError = el('p', { class: 'field__error', hidden: true },
       'Questo indirizzo non apre nessuna immagine. Controllalo: deve finire con .jpg, .png, .webp…');
 
+    // Dice a colpo d'occhio se quello scritto è un file del sito o un
+    // indirizzo esterno, e da quale servizio.
+    const tipoRiga = el('p', { class: 'field__hint' });
+
+    const aggiornaTipo = (value) => {
+      const { tipo, nota } = classificaUrl(value);
+      tipoRiga.classList.toggle('field__hint--warn', tipo === 'errato');
+      tipoRiga.textContent = {
+        vuoto:   '',
+        locale:  `File dentro al sito: ${nota}`,
+        esterno: `Indirizzo esterno, da ${nota}`,
+        errato:  nota,
+      }[tipo];
+    };
+
     const urlInput = el('input', {
       class: 'input', id: 'foto-url', name: 'url', required: true,
-      value: item?.url || '', placeholder: 'assets/img/noi.jpg',
+      value: item?.url || '', placeholder: 'assets/img/noi.jpg  —  oppure  https://…',
       onInput: (event) => {
         const value = event.target.value.trim();
         previewError.hidden = true;
         preview.hidden = !value;
         if (value) preview.src = value;
+        aggiornaTipo(value);
       },
     });
+
+    aggiornaTipo(item?.url || '');
 
     const form = el('form', { novalidate: true }, el('div', { class: 'stack stack--tight' }, [
       el('div', { class: 'field' }, [
         el('label', { class: 'field__label', for: 'foto-url' }, 'Indirizzo dell’immagine'),
         urlInput,
-        el('p', { class: 'field__hint' }, 'Un file dentro al sito (assets/img/…) oppure un link che apre l’immagine da sola. Il file non viene caricato: resta dov’è.'),
+        el('p', { class: 'field__hint' }, 'Due possibilità, e si possono mischiare: un file dentro al sito (assets/img/noi.jpg) oppure un link esterno che apre l’immagine da sola. In nessuno dei due casi il file viene caricato qui: resta dov’è.'),
+        tipoRiga,
         previewError,
       ]),
       preview,
@@ -97,6 +146,12 @@ export function createGalleryPanel(root, repo) {
     const values = formValues(form);
     if (!values.url) {
       toast('Serve l’indirizzo dell’immagine.', 'danger');
+      return;
+    }
+
+    const { tipo, nota } = classificaUrl(values.url);
+    if (tipo === 'errato') {
+      toast(nota, 'danger');
       return;
     }
 
@@ -147,7 +202,11 @@ export function createGalleryPanel(root, repo) {
           item.caption || 'Senza didascalia',
           item.published ? null : el('span', { class: 'badge badge--wait', style: 'margin-left:var(--sp-2)' }, 'Nascosta'),
         ]),
-        el('div', { class: 'sortable__desc' }, item.url),
+        el('div', { class: 'sortable__desc' }, [
+          el('span', { class: 'badge badge--soft', style: 'margin-right:var(--sp-2)' },
+            classificaUrl(item.url).tipo === 'esterno' ? 'esterna' : 'nel sito'),
+          item.url,
+        ]),
       ]),
       el('div', { class: 'table__actions' }, [
         moveButtons({

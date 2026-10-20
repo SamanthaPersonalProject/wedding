@@ -32,7 +32,14 @@
 
 <!-- ============================ ACCESSO ============================ -->
 <div class="login" id="schermata-accesso">
-  <form class="login__panel" id="form-accesso" novalidate>
+  <!-- method="post" non serve all'applicazione — l'accesso lo gestisce
+       js/admin/main.js, che blocca l'invio — ma è la rete di sicurezza se
+       quel JavaScript non parte: senza, il browser ripiega sul GET e
+       spedisce email e password nella barra degli indirizzi, da dove
+       finiscono nella cronologia e nei log del server. È già successo.
+       Il pulsante parte disabilitato per lo stesso motivo: lo riattiva
+       main.js quando il gestore è agganciato davvero. -->
+  <form class="login__panel" id="form-accesso" method="post" novalidate>
     <h1 class="login__title">Portale sposi</h1>
     <p class="field__hint" id="accesso-modo"></p>
 
@@ -48,7 +55,7 @@
 
     <p class="field__error" id="accesso-errore" role="alert" hidden></p>
 
-    <button class="btn btn--gold btn--block" type="submit" id="accesso-invia">Entra</button>
+    <button class="btn btn--gold btn--block" type="submit" id="accesso-invia" disabled>Attendi…</button>
     <a class="field__hint" href="../">← Torna al sito</a>
   </form>
 </div>
