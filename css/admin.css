@@ -314,6 +314,63 @@
 /* Lo stesso suggerimento, ma quando segnala qualcosa che non torna. */
 .field__hint--warn { color: var(--c-warn); }
 
+/* --- righe del pannello risposte ---------------------------- */
+
+.answer-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr auto;
+  align-items: baseline;
+  gap: var(--sp-3) var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: var(--b-light);
+}
+
+.answer-row:last-child { border-bottom: none; }
+
+.answer-row__who  { font-weight: 500; }
+.answer-row__what { white-space: pre-wrap; }   /* i messaggi vanno a capo */
+
+.answer-row__meta {
+  font-size: var(--fs-sm);
+  color: var(--t-on-light-mute);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .answer-row { grid-template-columns: 1fr; gap: var(--sp-1); }
+  .answer-row__meta { white-space: normal; }
+}
+
+/* --- stampa -------------------------------------------------
+   Serve a portare in cucina la lista delle allergie, non il
+   portale: via tutto quello che non è il pannello aperto. */
+
+@media print {
+  .admin__bar,
+  .tabs,
+  .mode-flag,
+  .panel-actions,
+  .toolbar,
+  .toast-host { display: none !important; }
+
+  .admin__main { padding: 0; }
+
+  .card {
+    border: none;
+    break-inside: avoid;
+  }
+
+  .card__head { border-bottom: 1px solid #999; }
+
+  .answer-row {
+    padding-inline: 0;
+    break-inside: avoid;
+  }
+
+  /* I riquadri vuoti su carta sono solo rumore. */
+  .empty { display: none; }
+}
+
 /* --- anteprima messaggio WhatsApp --------------------------- */
 
 .wa-preview {

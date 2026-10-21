@@ -6,6 +6,7 @@ import { createGuestsPanel } from './guests.js';
 import { createTimelinePanel } from './timeline.js';
 import { createInfoPanel } from './info.js';
 import { createDressCodePanel } from './dresscode.js';
+import { createAnswersPanel } from './answers.js';
 import { createSectionsPanel } from './sections.js';
 import { createGalleryPanel } from './gallery.js';
 import { createPlaylistPanel } from './playlist.js';
@@ -70,6 +71,7 @@ async function enterApp(user) {
 
   panels = {
     invitati: createGuestsPanel($('#pannello-invitati'), repo),
+    risposte: createAnswersPanel($('#pannello-risposte'), repo),
     programma: createTimelinePanel($('#pannello-programma'), repo),
     info: createInfoPanel($('#pannello-info'), repo),
     dresscode: createDressCodePanel($('#pannello-dresscode'), repo),

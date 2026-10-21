@@ -172,22 +172,34 @@ export function createInviteGate(container, repo) {
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /** Una riga per ospite: nome, sì/no, eventuale dieta. */
+  /**
+   * Una riga per ospite: nome, sì/no, e le allergie di chi viene.
+   *
+   * Le allergie hanno una domanda scritta sopra, non solo un testo
+   * grigio dentro la casella: un placeholder sparisce appena ci si
+   * clicca e si legge come un campo di contorno. Questa è la cosa che
+   * la cucina deve sapere, e va chiesta come si chiede una domanda.
+   */
   function buildGuestRow(guest) {
     const group = `stato-${guest.id}`;
+    const dietId = `dieta-${guest.id}`;
 
     const yes = el('input', { type: 'radio', name: group, value: 'confermato', checked: guest.status === 'confermato' });
     const no = el('input', { type: 'radio', name: group, value: 'assente', checked: guest.status === 'assente' });
 
     const diet = el('input', {
       class: 'input',
+      id: dietId,
       type: 'text',
       value: guest.diet || '',
-      placeholder: 'Allergie, intolleranze o dieta particolare',
-      'aria-label': `Allergie, intolleranze o dieta di ${guest.name}`,
+      placeholder: 'Niente di particolare? Lascia pure vuoto',
     });
 
-    const extra = el('div', { class: 'guest-row__extra', hidden: guest.status !== 'confermato' }, diet);
+    const extra = el('div', { class: 'guest-row__extra', hidden: guest.status !== 'confermato' }, [
+      el('label', { class: 'field__label', for: dietId }, `Allergie o intolleranze di ${guest.name.split(' ')[0]}?`),
+      diet,
+      el('p', { class: 'field__hint' }, 'Lo giriamo a chi cucina.'),
+    ]);
 
     const syncExtra = () => { extra.hidden = !yes.checked; };
     yes.addEventListener('change', syncExtra);
