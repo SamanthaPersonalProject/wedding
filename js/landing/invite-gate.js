@@ -82,14 +82,32 @@ export function createInviteGate(container, repo) {
     const { invite } = current;
     const alreadyAnswered = Boolean(invite.respondedAt);
 
-    const guestRows = invite.guests.map(buildGuestRow);
+    const guestRows = invite.guests.map((guest) => buildGuestRow(guest, () => refreshSubmit()));
 
     const specialNeeds = el('textarea', { class: 'textarea', id: 'esigenze', name: 'esigenze', rows: 3 }, invite.specialNeeds || '');
     const song = el('input', { class: 'input', id: 'canzone', name: 'canzone', type: 'text', value: invite.song || '' });
     const message = el('textarea', { class: 'textarea', id: 'messaggio', name: 'messaggio' }, invite.message || '');
 
-    const submit = el('button', { class: 'btn btn--gold', type: 'submit' },
-      alreadyAnswered ? 'Aggiorna la risposta' : 'Invia la conferma');
+    const submit = el('button', { class: 'btn btn--gold', type: 'submit' });
+
+    /** Quanti del gruppo non hanno ancora scelto, in questo momento. */
+    const undecidedNow = () =>
+      guestRows.filter((row) => row.read().status === 'in_attesa').length;
+
+    // Il pulsante dice cosa farà davvero: con qualcuno ancora indeciso
+    // non è una conferma, è un salvataggio di quello che si sa finora.
+    const refreshSubmit = () => {
+      const mancanti = undecidedNow();
+      submit.textContent = mancanti
+        ? 'Salva quello che sapete'
+        : alreadyAnswered ? 'Aggiorna la risposta' : 'Invia la conferma';
+      pendingNote.hidden = !mancanti;
+      if (mancanti) {
+        pendingNote.textContent = `${plural(mancanti, 'persona', 'persone')} del gruppo ancora senza risposta: potete salvare lo stesso e completare quando lo saprete.`;
+      }
+    };
+
+    const pendingNote = el('p', { class: 'field__hint', hidden: true });
 
     const form = el('form', {
       class: 'stack',
@@ -97,12 +115,11 @@ export function createInviteGate(container, repo) {
       onSubmit: async (event) => {
         event.preventDefault();
 
+        // Si salva anche a gruppo incompleto: chi aspetta notizie da un
+        // figlio o da un accompagnatore deve poter registrare intanto
+        // quello che sa — diete comprese — e tornare dopo. Gli indecisi
+        // restano 'in_attesa', stato che il database già prevede.
         const answers = guestRows.map((row) => row.read());
-        const undecided = answers.filter((answer) => answer.status === 'in_attesa');
-        if (undecided.length) {
-          toast('Manca la risposta per qualcuno del gruppo.', 'danger');
-          return;
-        }
 
         submit.disabled = true;
         submit.replaceChildren(el('span', { class: 'spinner' }), document.createTextNode('Salvataggio…'));
@@ -141,8 +158,10 @@ export function createInviteGate(container, repo) {
         message,
       ]),
 
-      el('div', {}, submit),
+      el('div', { class: 'stack stack--tight' }, [submit, pendingNote]),
     ]);
+
+    refreshSubmit();   // imposta etichetta e nota sullo stato di partenza
 
     render(container, el('div', { class: 'invite__card' }, [
       el('div', { class: 'invite__card-head' }, [
@@ -154,10 +173,15 @@ export function createInviteGate(container, repo) {
       ]),
 
       alreadyAnswered
-        ? el('div', { class: 'notice notice--ok' }, [
-            el('strong', {}, 'Abbiamo già la vostra risposta.'),
-            el('p', {}, 'Potete cambiarla da qui fino al ' + formatDateLong(config.wedding.rsvpDeadline) + '.'),
-          ])
+        ? el('div', { class: 'notice notice--ok' }, invite.guests.some((guest) => guest.status === 'in_attesa')
+            ? [
+                el('strong', {}, 'Abbiamo la vostra risposta, ma non per tutti.'),
+                el('p', {}, `Manca ancora ${plural(invite.guests.filter((guest) => guest.status === 'in_attesa').length, 'persona', 'persone')}. Completate quando volete, fino al ${formatDateLong(config.wedding.rsvpDeadline)}.`),
+              ]
+            : [
+                el('strong', {}, 'Abbiamo già la vostra risposta.'),
+                el('p', {}, 'Potete cambiarla da qui fino al ' + formatDateLong(config.wedding.rsvpDeadline) + '.'),
+              ])
         : null,
 
       form,
@@ -180,7 +204,7 @@ export function createInviteGate(container, repo) {
    * clicca e si legge come un campo di contorno. Questa è la cosa che
    * la cucina deve sapere, e va chiesta come si chiede una domanda.
    */
-  function buildGuestRow(guest) {
+  function buildGuestRow(guest, onChange) {
     const group = `stato-${guest.id}`;
     const dietId = `dieta-${guest.id}`;
 
@@ -201,7 +225,7 @@ export function createInviteGate(container, repo) {
       el('p', { class: 'field__hint' }, 'Lo giriamo a chi cucina.'),
     ]);
 
-    const syncExtra = () => { extra.hidden = !yes.checked; };
+    const syncExtra = () => { extra.hidden = !yes.checked; onChange?.(); };
     yes.addEventListener('change', syncExtra);
     no.addEventListener('change', syncExtra);
 
@@ -232,20 +256,35 @@ export function createInviteGate(container, repo) {
   function showThanks() {
     const { invite } = current;
     const coming = invite.guests.filter((guest) => guest.status === 'confermato');
+    const pending = invite.guests.filter((guest) => guest.status === 'in_attesa');
+
+    // Tre esiti diversi, e vanno detti in modo diverso: tutti hanno
+    // risposto e qualcuno viene, tutti hanno risposto e non viene
+    // nessuno, oppure il gruppo è ancora a metà.
+    const titolo = pending.length
+      ? 'Abbiamo salvato.'
+      : coming.length ? 'Grazie, ci vediamo il 21 maggio.' : 'Grazie per avercelo detto.';
 
     render(container, el('div', { class: 'invite__card' }, [
-      el('h3', { class: 'invite__group' }, coming.length ? 'Grazie, ci vediamo il 21 maggio.' : 'Grazie per avercelo detto.'),
+      el('h3', { class: 'invite__group' }, titolo),
       el('div', { class: 'prose' }, [
         coming.length
           ? el('p', {}, `Abbiamo segnato ${plural(coming.length, 'posto', 'posti')} a nome di ${invite.groupName}: ${coming.map((guest) => guest.name).join(', ')}.`)
-          : el('p', {}, 'Ci mancherete. Se cambia qualcosa, potete rientrare con lo stesso codice.'),
+          : pending.length
+            ? null
+            : el('p', {}, 'Ci mancherete. Se cambia qualcosa, potete rientrare con lo stesso codice.'),
+
+        pending.length
+          ? el('p', {}, `Restiamo in attesa per ${pending.map((guest) => guest.name).join(', ')}: tornate con lo stesso codice quando lo saprete, non serve rifare tutto.`)
+          : null,
+
         el('p', {}, `Si può modificare fino al ${formatDateLong(config.wedding.rsvpDeadline)}.`),
       ]),
       el('button', {
         class: 'btn btn--quiet btn--sm',
         type: 'button',
         onClick: () => showInviteCard(),
-      }, 'Modifica la risposta'),
+      }, pending.length ? 'Completa la risposta' : 'Modifica la risposta'),
     ]));
   }
 
