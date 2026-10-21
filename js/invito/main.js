@@ -120,7 +120,7 @@ function showInvite(invite) {
     el('div', { class: 'invito__go' }, [
       el('a', { class: 'btn btn--gold', href: 'index.html#invito' }, 'Apri il sito e conferma'),
       el('p', { class: 'invito__go-hint' },
-        `Il codice serve lì: apre il programma, le informazioni pratiche e la conferma di presenza. Vi aspettiamo entro ${formatDateLong(config.wedding.rsvpDeadline)}.`),
+        `Copiate il codice, aprite il sito e inseritelo per dare conferma, scrivere le vostre esigenze e tutto ciò che serve. Vi aspettiamo entro ${formatDateLong(config.wedding.rsvpDeadline)}.`),
     ]),
   ));
 
